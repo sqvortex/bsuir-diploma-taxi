@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Montserrat+Alternates:wght@700&display=swap" rel="stylesheet">
   {# Bootstrap лежит в проекте (static/vendor), поэтому сайт выглядит одинаково и без интернета #}
   <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
   <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
@@ -16,7 +16,7 @@
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
         <span class="brand-mark"><i class="bi bi-bus-front"></i></span>
-        <span class="brand-name">{{ SITE_NAME }}</span>
+        <span class="brand-name">{{ LOGO_MAIN }}<span class="brand-accent">{{ LOGO_ACCENT }}</span></span>
       </a>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Меню">
         <span class="navbar-toggler-icon"></span>

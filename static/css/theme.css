@@ -5,20 +5,23 @@
   достаточно поменять эти несколько значений, остальные стили берут цвета отсюда.
 */
 :root {
-  --brand: #0f766e;          /* основной цвет: кнопки, ссылки, шапка */
-  --brand-dark: #115e59;     /* тот же цвет темнее: наведение, градиент */
-  --brand-light: #ccfbf1;    /* светлый фон для выделений */
-  --accent: #f59e0b;         /* акцент: цены, важные значки */
-  --ink: #0f172a;            /* основной текст */
-  --muted: #64748b;          /* второстепенный текст */
+  /* Палитра Viago: спокойный фиолетовый */
+  --brand: #5e3bdb;          /* основной цвет: кнопки, ссылки, логотип */
+  --brand-dark: #4a2bbf;     /* тот же цвет темнее: наведение на кнопки */
+  --brand-light: #f4f0ff;    /* светлый фон: главный экран, значки */
+  --accent: #5e3bdb;         /* кнопка поиска */
+  --accent-fg: #ffffff;      /* текст на кнопке поиска */
+  --ok: #1f9d6b;             /* «свободно», успешные действия */
+  --ink: #231942;            /* основной текст */
+  --muted: #6b6485;          /* второстепенный текст */
   --surface: #ffffff;        /* фон карточек */
-  --page: #f1f5f9;           /* фон страницы */
-  --line: #e2e8f0;           /* рамки и разделители */
+  --page: #faf9fe;           /* фон страницы */
+  --line: #e7e3f3;           /* рамки и разделители */
   --radius: 14px;
 
   /* Подставляем наши цвета в Bootstrap */
   --bs-primary: var(--brand);
-  --bs-primary-rgb: 15, 118, 110;
+  --bs-primary-rgb: 94, 59, 219;
   --bs-link-color: var(--brand);
   --bs-link-hover-color: var(--brand-dark);
   --bs-body-font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -53,13 +56,13 @@ main {
 .btn-accent {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--ink);
+  color: var(--accent-fg);
   font-weight: 700;
 }
 
 .btn-accent:hover {
-  filter: brightness(0.95);
-  color: var(--ink);
+  filter: brightness(0.92);
+  color: var(--accent-fg);
 }
 
 .btn-outline-primary {
@@ -94,17 +97,20 @@ main {
 }
 
 .brand-name {
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: "Montserrat Alternates", var(--bs-body-font-family);
+  font-weight: 700;
+  font-size: 1.35rem;
   color: var(--ink);
+}
+
+.brand-accent {
+  color: var(--brand);
 }
 
 /* ---------- Главный экран ---------- */
 .hero {
-  background:
-    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.25), transparent 40%),
-    linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  color: #fff;
+  background: var(--brand-light);
+  color: var(--ink);
   padding: 4rem 0 7rem;
 }
 
@@ -113,8 +119,12 @@ main {
   letter-spacing: -0.03em;
 }
 
+.hero h1 span {
+  color: var(--brand);
+}
+
 .hero .lead {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--muted);
 }
 
 .search-card {
@@ -201,8 +211,8 @@ main {
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
-  background: var(--brand-light);
-  color: var(--brand-dark);
+  background: #e3f5ec;
+  color: var(--ok);
 }
 
 .seats-badge.is-low {
