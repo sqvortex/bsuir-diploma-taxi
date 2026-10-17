@@ -1,0 +1,11 @@
+{# Одно поле формы с подписью, подсказкой и ошибками. Использование: {% include "includes/field.html" with field=form.phone %} #}
+<div class="mb-3">
+  <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% if field.errors %}
+    <div class="is-invalid">{{ field }}</div>
+    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+  {% else %}
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+</div>

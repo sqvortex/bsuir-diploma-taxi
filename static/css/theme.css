@@ -1,0 +1,275 @@
+/*
+  Оформление сайта.
+
+  Все цвета сервиса собраны в блоке :root ниже. Чтобы сменить палитру,
+  достаточно поменять эти несколько значений, остальные стили берут цвета отсюда.
+*/
+:root {
+  --brand: #0f766e;          /* основной цвет: кнопки, ссылки, шапка */
+  --brand-dark: #115e59;     /* тот же цвет темнее: наведение, градиент */
+  --brand-light: #ccfbf1;    /* светлый фон для выделений */
+  --accent: #f59e0b;         /* акцент: цены, важные значки */
+  --ink: #0f172a;            /* основной текст */
+  --muted: #64748b;          /* второстепенный текст */
+  --surface: #ffffff;        /* фон карточек */
+  --page: #f1f5f9;           /* фон страницы */
+  --line: #e2e8f0;           /* рамки и разделители */
+  --radius: 14px;
+
+  /* Подставляем наши цвета в Bootstrap */
+  --bs-primary: var(--brand);
+  --bs-primary-rgb: 15, 118, 110;
+  --bs-link-color: var(--brand);
+  --bs-link-hover-color: var(--brand-dark);
+  --bs-body-font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-body-color: var(--ink);
+  --bs-body-bg: var(--page);
+  --bs-border-radius: 10px;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* ---------- Кнопки ---------- */
+.btn-primary {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-dark);
+  --bs-btn-hover-border-color: var(--brand-dark);
+  --bs-btn-active-bg: var(--brand-dark);
+  --bs-btn-active-border-color: var(--brand-dark);
+  --bs-btn-disabled-bg: var(--brand);
+  --bs-btn-disabled-border-color: var(--brand);
+  font-weight: 600;
+}
+
+.btn-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.btn-accent:hover {
+  filter: brightness(0.95);
+  color: var(--ink);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand);
+  --bs-btn-hover-border-color: var(--brand);
+  --bs-btn-active-bg: var(--brand-dark);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.2);
+}
+
+/* ---------- Шапка ---------- */
+.site-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.brand-name {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ---------- Главный экран ---------- */
+.hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.25), transparent 40%),
+    linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: #fff;
+  padding: 4rem 0 7rem;
+}
+
+.hero h1 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.hero .lead {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.search-card {
+  margin-top: -4.5rem;
+}
+
+/* ---------- Карточки ---------- */
+.card-soft {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+}
+
+.feature-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--brand-light);
+  color: var(--brand-dark);
+  font-size: 1.4rem;
+}
+
+.price {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.price small {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.text-muted-soft {
+  color: var(--muted);
+}
+
+/* ---------- Рейс в результатах поиска ---------- */
+.trip-time {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.trip-line {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  margin: 0 0.75rem;
+}
+
+.trip-line::before,
+.trip-line::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--brand);
+  background: var(--surface);
+}
+
+.trip-line::before { left: 0; }
+.trip-line::after { right: 0; background: var(--brand); }
+
+.seats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.seats-badge.is-low {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.seats-badge.is-none {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ---------- Кабинеты ---------- */
+.stat-tile {
+  padding: 1.25rem;
+}
+
+.stat-tile .value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.stat-tile .label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.load-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.load-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
+
+.role-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-dark);
+  background: var(--brand-light);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+}
+
+/* ---------- Формы входа и регистрации ---------- */
+.auth-wrap {
+  max-width: 440px;
+  margin: 3rem auto;
+}
+
+/* ---------- Подвал ---------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .hero { padding: 2.5rem 0 6rem; }
+  .trip-time { font-size: 1.25rem; }
+}

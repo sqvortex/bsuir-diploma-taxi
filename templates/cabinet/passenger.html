@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Мои поездки · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "cabinet/_header.html" with title="Мои поездки" subtitle=user.phone %}
+
+  <h2 class="h5 fw-bold mb-3">Предстоящие</h2>
+  {% for booking in upcoming %}
+    <div class="card-soft p-3 p-md-4 mb-3">
+      <div class="row align-items-center g-2">
+        <div class="col-md-8">
+          <div class="fw-bold fs-5">{{ booking.from_stop.stop.city }} <i class="bi bi-arrow-right text-muted-soft"></i> {{ booking.to_stop.stop.city }}</div>
+          <div class="text-muted-soft">
+            <i class="bi bi-calendar3"></i> {{ booking.trip.departure_at|date:"j E, H:i" }}
+            · посадка: {{ booking.from_stop.stop.name }}
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="price fs-5">{{ booking.price|floatformat:2 }} <small>BYN</small></div>
+          <div class="small text-muted-soft">мест: {{ booking.seats_count }}</div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card-soft p-5 text-center mb-4">
+      <div class="feature-icon mb-3"><i class="bi bi-ticket-perforated"></i></div>
+      <h3 class="h5 fw-bold">Пока нет поездок</h3>
+      <p class="text-muted-soft">Найдите рейс и забронируйте место.</p>
+      <a href="{% url 'core:search' %}" class="btn btn-primary">Найти рейс</a>
+    </div>
+  {% endfor %}
+
+  {% if past %}
+    <h2 class="h5 fw-bold mt-4 mb-3">История</h2>
+    <div class="card-soft">
+      <ul class="list-group list-group-flush">
+        {% for booking in past %}
+          <li class="list-group-item d-flex justify-content-between bg-transparent">
+            <span>{{ booking.trip.departure_at|date:"d.m.Y" }} · {{ booking.from_stop.stop.city }} → {{ booking.to_stop.stop.city }}</span>
+            <span class="text-muted-soft">{{ booking.get_status_display }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

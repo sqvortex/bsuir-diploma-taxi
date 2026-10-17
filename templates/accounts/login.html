@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Вход · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="auth-wrap card-soft p-4 p-md-5">
+    <h1 class="h3 fw-bold mb-1">Вход</h1>
+    <p class="text-muted-soft mb-4">Введите телефон и пароль</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2">Неверный телефон или пароль.</div>
+      {% endif %}
+      {% include "includes/field.html" with field=form.username %}
+      {% include "includes/field.html" with field=form.password %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-primary btn-lg w-100 mt-2" type="submit">Войти</button>
+    </form>
+    <p class="text-center text-muted-soft mt-4 mb-0">Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрируйтесь</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Мои рейсы · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "cabinet/_header.html" with title="Мои рейсы сегодня" %}
+  <p class="text-muted-soft mt-n3 mb-4">{{ today|date:"j E Y, l" }}</p>
+
+  {% for trip in trips %}
+    {% include "cabinet/_trip_row.html" %}
+  {% empty %}
+    <div class="card-soft p-4 text-center text-muted-soft mb-3">Сегодня рейсов нет.</div>
+  {% endfor %}
+
+  {% if upcoming %}
+    <h2 class="h5 fw-bold mt-4 mb-3">На неделю вперёд</h2>
+    {% for trip in upcoming %}{% include "cabinet/_trip_row.html" %}{% endfor %}
+  {% endif %}
+
+  <p class="small text-muted-soft mt-4"><i class="bi bi-info-circle"></i> Посадочная ведомость и отметки «сел» / «не явился» появятся на этапе 5.</p>
+</div>
+{% endblock %}

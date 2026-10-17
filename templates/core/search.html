@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Поиск рейсов · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card-soft p-3 p-md-4 mb-4">
+    {% include "includes/search_form.html" %}
+  </div>
+
+  {% if offers is not None %}
+    <h1 class="h4 fw-bold mb-3">
+      {{ form.cleaned_data.from_city }} <i class="bi bi-arrow-right text-muted-soft"></i> {{ form.cleaned_data.to_city }},
+      {{ form.cleaned_data.date|date:"j E, l" }}
+    </h1>
+
+    {% for offer in offers %}
+      <div class="card-soft card-hover p-3 p-md-4 mb-3">
+        <div class="row align-items-center g-3">
+          <div class="col-md-7">
+            <div class="d-flex align-items-center">
+              <div>
+                <div class="trip-time">{{ offer.departure|time:"H:i" }}</div>
+                <div class="small text-muted-soft">{{ offer.from_stop.stop.name }}</div>
+              </div>
+              <div class="trip-line"></div>
+              <div class="text-end">
+                <div class="trip-time">{{ offer.arrival|time:"H:i" }}</div>
+                <div class="small text-muted-soft">{{ offer.to_stop.stop.name }}</div>
+              </div>
+            </div>
+            <div class="small text-muted-soft mt-2">
+              <i class="bi bi-clock"></i> {{ offer.duration_display }}
+              · {{ offer.trip.route }}
+              {% if offer.trip.vehicle %}· {{ offer.trip.vehicle.brand }}{% endif %}
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            {% if offer.free_seats == 0 %}
+              <span class="seats-badge is-none"><i class="bi bi-x-circle"></i> мест нет</span>
+            {% elif offer.free_seats <= 3 %}
+              <span class="seats-badge is-low"><i class="bi bi-exclamation-circle"></i> осталось {{ offer.free_seats }}</span>
+            {% else %}
+              <span class="seats-badge"><i class="bi bi-person-check"></i> свободно {{ offer.free_seats }}</span>
+            {% endif %}
+          </div>
+          <div class="col-6 col-md-2 text-end">
+            <div class="price fs-4">{{ offer.price|floatformat:2 }} <small>BYN</small></div>
+            <button class="btn btn-primary btn-sm mt-2 w-100" disabled title="Бронирование появится на этапе 4">Выбрать</button>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card-soft p-5 text-center">
+        <div class="feature-icon mb-3"><i class="bi bi-calendar-x"></i></div>
+        <h2 class="h5 fw-bold">Рейсов на эту дату нет</h2>
+        <p class="text-muted-soft mb-0">Попробуйте другую дату или соседний город.</p>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
