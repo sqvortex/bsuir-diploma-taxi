@@ -1,0 +1,8 @@
+{# Вкладки панели диспетчера. active — имя текущей вкладки. #}
+<ul class="nav nav-pills dispatch-tabs flex-nowrap overflow-auto mb-4">
+  <li class="nav-item"><a class="nav-link {% if active == 'trips' %}active{% endif %}" href="{% url 'dispatch:trips' %}"><i class="bi bi-bus-front"></i> Рейсы</a></li>
+  <li class="nav-item"><a class="nav-link {% if active == 'templates' %}active{% endif %}" href="{% url 'dispatch:templates' %}"><i class="bi bi-calendar-week"></i> Расписание</a></li>
+  <li class="nav-item"><a class="nav-link {% if active == 'routes' %}active{% endif %}" href="{% url 'dispatch:routes' %}"><i class="bi bi-signpost-split"></i> Маршруты</a></li>
+  <li class="nav-item"><a class="nav-link {% if active == 'stops' %}active{% endif %}" href="{% url 'dispatch:stops' %}"><i class="bi bi-geo-alt"></i> Остановки</a></li>
+  <li class="nav-item"><a class="nav-link {% if active == 'vehicles' %}active{% endif %}" href="{% url 'dispatch:vehicles' %}"><i class="bi bi-truck-front"></i> Автопарк</a></li>
+</ul>
