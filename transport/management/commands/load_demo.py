@@ -5,21 +5,23 @@
 Команду можно запускать повторно: уже созданные записи не дублируются.
 
 Создаются пользователи всех ролей (пароль у всех demo12345):
-    +375291111111  водитель
+    +375291111111, +375291111112, +375291111113  водители
     +375292222222  диспетчер
     +375293333333  пассажир
 """
 
 import random
-from datetime import date, time, timedelta
+from datetime import time, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from accounts.models import User
 from bookings.models import Booking
-from transport.models import Route, RouteStop, ScheduleTemplate, Stop, Trip, Vehicle
+from transport.models import Route, RouteStop, ScheduleTemplate, Stop, Vehicle
+from transport.schedule import generate_trips
 
 DEMO_PASSWORD = "demo12345"
 
@@ -72,7 +74,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         random.seed(42)  # одинаковые «случайные» брони при каждом запуске
 
-        driver = self.get_user("+375291111111", "Иван", "Петров", User.Role.DRIVER)
+        # У каждого маршрута свой водитель, чтобы рейсы одного водителя не пересекались по времени.
+        drivers = [
+            self.get_user("+375291111111", "Иван", "Петров", User.Role.DRIVER),
+            self.get_user("+375291111112", "Олег", "Козлов", User.Role.DRIVER),
+            self.get_user("+375291111113", "Пётр", "Новиков", User.Role.DRIVER),
+        ]
         self.get_user("+375292222222", "Наталья", "Сидорова", User.Role.DISPATCHER)
         passenger = self.get_user("+375293333333", "Анна", "Ковалёва", User.Role.PASSENGER)
 
@@ -95,24 +102,23 @@ class Command(BaseCommand):
                 )
             route_stops = list(route.ordered_stops())
             vehicle = vehicles[route_index % len(vehicles)]
+            driver = drivers[route_index % len(drivers)]
 
             for departure_time in DEPARTURES:
                 template, _ = ScheduleTemplate.objects.get_or_create(
                     route=route, departure_time=departure_time,
-                    defaults={"weekdays": "1234567", "valid_from": date.today(),
-                              "default_vehicle": vehicle, "default_driver": driver},
+                    defaults={"weekdays": "1234567", "valid_from": timezone.localdate()},
                 )
-                # Пока генерации рейсов по шаблону нет (это этап 3),
-                # создаём рейсы на 7 дней вперёд прямо здесь.
-                for shift in range(7):
-                    day = date.today() + timedelta(days=shift)
-                    if not template.runs_on(day):
-                        continue
-                    trip, created = Trip.objects.get_or_create(
-                        route=route, departure_at=template.departure_on(day),
-                        defaults={"template": template, "vehicle": vehicle, "driver": driver},
-                    )
-                    trips_created += created
+                # Машина и водитель обновляются и у уже созданных шаблонов и рейсов,
+                # чтобы повторный запуск исправлял старые демо-данные.
+                template.default_vehicle, template.default_driver = vehicle, driver
+                template.save()
+                template.trips.update(vehicle=vehicle, driver=driver)
+                # Рейсы на неделю вперёд создаём так же, как это делает диспетчер.
+                result = generate_trips(timezone.localdate(), timezone.localdate() + timedelta(days=6), [template])
+                trips_created += result.created
+                for trip in template.trips.filter(departure_at__date__gte=timezone.localdate()):
+                    shift = (timezone.localdate(trip.departure_at) - timezone.localdate()).days
                     if not trip.bookings.exists():
                         # Демо-пассажир едет Минск – Гомель утренним рейсом завтра и через 4 дня.
                         rider = passenger if (route_index == 0 and departure_time == DEPARTURES[0]

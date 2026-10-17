@@ -26,3 +26,19 @@ def role_required(*roles):
             return view(request, *args, **kwargs)
         return wrapper
     return decorator
+
+
+class RoleRequiredMixin:
+    """
+    То же самое для вьюх-классов (ListView, CreateView и т. п.).
+
+    class RouteList(RoleRequiredMixin, ListView):
+        allowed_roles = [User.Role.DISPATCHER, User.Role.ADMIN]
+    """
+
+    allowed_roles = []
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super().as_view(**initkwargs)
+        return role_required(*cls.allowed_roles)(view)

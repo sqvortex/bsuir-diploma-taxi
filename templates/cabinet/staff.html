@@ -19,7 +19,7 @@
     <div class="{% if users_by_role %}col-lg-8{% else %}col-12{% endif %}">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h5 fw-bold mb-0">Рейсы на {{ today|date:"j E" }}</h2>
-        <a class="btn btn-outline-primary btn-sm" href="{% url 'admin:transport_trip_changelist' %}">Все рейсы</a>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'dispatch:trips' %}">Все рейсы</a>
       </div>
       {% for trip in trips %}
         {% include "cabinet/_trip_row.html" with show_driver=True %}

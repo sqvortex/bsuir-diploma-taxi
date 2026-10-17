@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if route %}{{ route }}{% else %}Новый маршрут{% endif %} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 960px">
+  <a class="text-decoration-none small" href="{% url 'dispatch:routes' %}"><i class="bi bi-arrow-left"></i> Все маршруты</a>
+  <h1 class="h3 fw-bold mt-2 mb-4">{% if route %}{{ route }}{% else %}Новый маршрут{% endif %}</h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="card-soft p-4 mb-4">
+      <div class="row align-items-end">
+        <div class="col-md-8">{% include "includes/field.html" with field=form.name %}</div>
+        <div class="col-md-4">
+          <div class="form-check form-switch mb-3">
+            {{ form.is_active }} <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="h5 fw-bold mb-2">Остановки</h2>
+    <p class="text-muted-soft small">Время и цена указываются от начальной остановки. Для участка между остановками они посчитаются сами. Чтобы добавить остановку, заполните пустую строку; новых строк станет больше после сохранения. Нужной остановки нет в списке? <a href="{% url 'dispatch:stop_new' %}" target="_blank">Добавьте её</a>.</p>
+
+    {{ formset.management_form }}
+    {% for error in formset.non_form_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+    <div class="card-soft overflow-hidden mb-4">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 stops-table">
+          <thead><tr><th style="width: 80px">№</th><th>Остановка</th><th style="width: 150px">Минут от начала</th><th style="width: 170px">Цена от начала, BYN</th><th style="width: 90px">Удалить</th></tr></thead>
+          <tbody>
+            {% for f in formset %}
+              <tr>
+                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                <td>{{ f.order }}{% for e in f.order.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+                <td>{{ f.stop }}{% for e in f.stop.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+                <td>{{ f.minutes_from_start }}{% for e in f.minutes_from_start.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+                <td>{{ f.price_from_start }}{% for e in f.price_from_start.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+                <td class="text-center">{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary px-4" type="submit">Сохранить маршрут</button>
+      <a class="btn btn-outline-secondary" href="{% url 'dispatch:routes' %}">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

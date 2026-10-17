@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Рейсы · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "dispatch/_nav.html" with active="trips" %}
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="h4 fw-bold mb-0">Рейсы на {{ day|date:"j E, l" }}</h1>
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <a class="btn btn-outline-primary btn-sm" href="?date={{ prev_day|date:'Y-m-d' }}" aria-label="Предыдущий день"><i class="bi bi-chevron-left"></i></a>
+      <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control form-control-sm" onchange="this.form.submit()">
+      <a class="btn btn-outline-primary btn-sm" href="?date={{ next_day|date:'Y-m-d' }}" aria-label="Следующий день"><i class="bi bi-chevron-right"></i></a>
+    </form>
+  </div>
+
+  {% for trip in trips %}
+    <div class="card-soft p-3 mb-2 {% if trip.status == 'cancelled' %}opacity-50{% endif %}">
+      <div class="row align-items-center g-2">
+        <div class="col-3 col-md-1"><div class="trip-time">{{ trip.departure_at|time:"H:i" }}</div></div>
+        <div class="col-9 col-md-4">
+          <div class="fw-semibold">{{ trip.route }}</div>
+          <div class="small text-muted-soft">
+            {% if trip.vehicle %}{{ trip.vehicle.brand }}, {{ trip.vehicle.plate_number }}{% else %}<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> нет машины</span>{% endif %}
+            · {% if trip.driver %}{{ trip.driver.get_full_name|default:trip.driver.phone }}{% else %}<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> нет водителя</span>{% endif %}
+          </div>
+        </div>
+        <div class="col-8 col-md-4">
+          <div class="d-flex justify-content-between small mb-1"><span>Занято {{ trip.booked }} из {{ trip.capacity }}</span><span class="text-muted-soft">{{ trip.load_percent }}%</span></div>
+          <div class="load-bar"><span style="width: {{ trip.load_percent }}%"></span></div>
+        </div>
+        <div class="col-4 col-md-3 text-end">
+          {% if trip.status != 'scheduled' %}<span class="badge text-bg-light me-2">{{ trip.get_status_display }}</span>{% endif %}
+          <a class="btn btn-sm {% if trip.needs_attention %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'dispatch:trip_edit' trip.pk %}">
+            {% if trip.needs_attention %}Назначить{% else %}Изменить{% endif %}
+          </a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card-soft p-5 text-center">
+      <div class="feature-icon mb-3"><i class="bi bi-calendar-x"></i></div>
+      <h2 class="h5 fw-bold">На этот день рейсов нет</h2>
+      <p class="text-muted-soft">Рейсы создаются по шаблонам расписания.</p>
+      <a class="btn btn-primary" href="{% url 'dispatch:templates' %}">К расписанию</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

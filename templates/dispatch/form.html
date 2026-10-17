@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 720px">
+  <a class="text-decoration-none small" href="{{ back_url }}"><i class="bi bi-arrow-left"></i> Назад</a>
+  <h1 class="h3 fw-bold mt-2 mb-4">{{ title }}</h1>
+  <form method="post" class="card-soft p-4" novalidate>
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+    {% for field in form %}
+      {% if field.field.widget.input_type == "checkbox" %}
+        <div class="form-check form-switch mb-3">
+          {{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        </div>
+      {% else %}
+        {% include "includes/field.html" %}
+      {% endif %}
+    {% endfor %}
+    <div class="d-flex gap-2 mt-2">
+      <button class="btn btn-primary px-4" type="submit">Сохранить</button>
+      <a class="btn btn-outline-secondary" href="{{ back_url }}">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

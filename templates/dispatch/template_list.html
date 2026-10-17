@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Расписание · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "dispatch/_nav.html" with active="templates" %}
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 fw-bold mb-0">Шаблоны расписания</h1>
+        <a class="btn btn-primary btn-sm" href="{% url 'dispatch:template_new' %}"><i class="bi bi-plus-lg"></i> Добавить</a>
+      </div>
+      <div class="card-soft overflow-hidden">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead><tr><th>Маршрут</th><th>Время</th><th>Дни</th><th>Машина и водитель</th><th>Действует</th></tr></thead>
+            <tbody>
+              {% for t in object_list %}
+                <tr>
+                  <td><a href="{% url 'dispatch:template_edit' t.pk %}" class="fw-semibold">{{ t.route }}</a></td>
+                  <td class="fw-bold">{{ t.departure_time|time:"H:i" }}</td>
+                  <td>{{ t.weekdays_display }}</td>
+                  <td class="small">{{ t.default_vehicle.plate_number|default:"—" }}<br><span class="text-muted-soft">{{ t.default_driver.get_full_name|default:"—" }}</span></td>
+                  <td class="small text-muted-soft">с {{ t.valid_from|date:"d.m.Y" }}{% if t.valid_to %}<br>по {{ t.valid_to|date:"d.m.Y" }}{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="text-center text-muted-soft p-4">Шаблонов пока нет.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card-soft p-4">
+        <div class="feature-icon mb-3"><i class="bi bi-magic"></i></div>
+        <h2 class="h5 fw-bold">Создать рейсы</h2>
+        <p class="text-muted-soft small">По всем шаблонам будут созданы рейсы на выбранное число дней. Уже существующие рейсы не дублируются.</p>
+        <form method="post" action="{% url 'dispatch:trips_generate' %}">
+          {% csrf_token %}
+          {% include "includes/field.html" with field=generate_form.days %}
+          <button class="btn btn-primary w-100" type="submit">Создать рейсы</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

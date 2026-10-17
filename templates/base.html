@@ -24,6 +24,9 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{% url 'core:search' %}">Найти рейс</a></li>
+          {% if user.is_dispatcher or user.is_admin_role %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'dispatch:trips' %}">Панель диспетчера</a></li>
+          {% endif %}
         </ul>
         <ul class="navbar-nav align-items-md-center gap-md-2">
           {% if user.is_authenticated %}
