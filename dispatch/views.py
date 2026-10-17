@@ -194,10 +194,15 @@ def trip_list(request):
     trips = (
         Trip.objects.filter(departure_at__date=day)
         .select_related("route", "vehicle", "driver")
-        .annotate(booked=Sum(
-            "bookings__seats_count",
-            filter=Q(bookings__status__in=Booking.OCCUPYING_STATUSES),
-        ))
+        .annotate(
+            booked=Sum(
+                "bookings__seats_count",
+                filter=Q(bookings__status__in=Booking.OCCUPYING_STATUSES),
+            ),
+            bookings_count=Count(
+                "bookings", filter=Q(bookings__status__in=Booking.OCCUPYING_STATUSES)
+            ),
+        )
         .order_by("departure_at", "route__name")
     )
     for trip in trips:
@@ -227,3 +232,22 @@ class TripUpdate(StaffMixin, SimpleFormMixin, UpdateView):
         context["title"] = str(self.object)
         context["back_url"] = self.get_success_url()
         return context
+
+
+@role_required(*STAFF)
+def trip_bookings(request, pk):
+    """Брони рейса: кто едет, откуда и куда; отсюда же бронь по звонку и отмена (ФТ-14)."""
+    trip = get_object_or_404(Trip.objects.select_related("route", "vehicle", "driver"), pk=pk)
+    bookings = (
+        trip.bookings.select_related("from_stop__stop", "to_stop__stop", "created_by")
+        .order_by("from_stop__order", "created_at")
+    )
+    booked = sum(b.seats_count for b in bookings if b.occupies_seats)
+    for booking in bookings:
+        booking.cancellable = booking.can_cancel(request.user)
+    return render(request, "dispatch/trip_bookings.html", {
+        "trip": trip,
+        "bookings": bookings,
+        "booked": booked,
+        "day": timezone.localdate(trip.departure_at),
+    })

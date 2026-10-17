@@ -85,9 +85,13 @@ def passenger_cabinet(request):
         .select_related("trip__route", "from_stop__stop", "to_stop__stop")
         .order_by("trip__departure_at")
     )
+    upcoming = bookings.filter(trip__departure_at__gte=now, status=Booking.Status.ACTIVE)
+    # История (ФТ-6): прошедшие поездки и отменённые брони, самые свежие сверху.
+    history = bookings.exclude(pk__in=upcoming).order_by("-trip__departure_at")[:20]
     return render(request, "cabinet/passenger.html", {
-        "upcoming": bookings.filter(trip__departure_at__gte=now, status=Booking.Status.ACTIVE),
-        "past": bookings.filter(trip__departure_at__lt=now).order_by("-trip__departure_at")[:10],
+        "upcoming": [(booking, booking.can_cancel(request.user)) for booking in upcoming],
+        "history": history,
+        "today": timezone.localdate(),
     })
 
 

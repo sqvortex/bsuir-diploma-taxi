@@ -1,0 +1,42 @@
+# Запуск сайта вместе с PostgreSQL одной командой:
+#     docker compose up --build
+# Сайт откроется на http://127.0.0.1:8000/
+# Демо-данные:  docker compose exec web python manage.py load_demo
+# Тесты на PostgreSQL:  docker compose exec web pytest
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: viago
+      POSTGRES_USER: viago
+      POSTGRES_PASSWORD: viago
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # данные базы сохраняются между запусками
+    ports:
+      - "5433:5432"   # база доступна с компьютера на порту 5433 (5432 часто занят своим PostgreSQL)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U viago -d viago"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      POSTGRES_DB: viago
+      POSTGRES_USER: viago
+      POSTGRES_PASSWORD: viago
+      POSTGRES_HOST: db
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app   # код берётся из папки проекта, правки видны без пересборки
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

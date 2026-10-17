@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Брони рейса · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "dispatch/_nav.html" with active="trips" %}
+
+  <a class="small text-decoration-none" href="{% url 'dispatch:trips' %}?date={{ day|date:'Y-m-d' }}"><i class="bi bi-arrow-left"></i> К рейсам за {{ day|date:"j E" }}</a>
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mt-2 mb-3">
+    <div>
+      <h1 class="h4 fw-bold mb-1">{{ trip.route }}, {{ trip.departure_at|date:"j E, H:i" }}</h1>
+      <div class="text-muted-soft small">
+        {% if trip.vehicle %}{{ trip.vehicle.brand }}, {{ trip.vehicle.plate_number }}{% else %}машина не назначена{% endif %}
+        · {% if trip.driver %}{{ trip.driver.get_full_name|default:trip.driver.phone }}{% else %}водитель не назначен{% endif %}
+        · занято мест {{ booked }} из {{ trip.capacity }}
+      </div>
+    </div>
+    {% if trip.status == "scheduled" %}
+      <a class="btn btn-primary" href="{% url 'bookings:book' trip.pk %}"><i class="bi bi-telephone-plus"></i> Бронь по звонку</a>
+    {% endif %}
+  </div>
+
+  <div class="card-soft">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr><th>Бронь</th><th>Пассажир</th><th>Участок</th><th class="text-center">Мест</th><th class="text-end">Сумма</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for booking in bookings %}
+            <tr class="{% if not booking.occupies_seats %}text-muted-soft{% endif %}">
+              <td><a href="{% url 'bookings:detail' booking.pk %}">{{ booking.code }}</a></td>
+              <td>
+                <div class="fw-semibold">{{ booking.passenger_name }}</div>
+                <div class="small text-muted-soft">{{ booking.passenger_phone }}</div>
+              </td>
+              <td>{{ booking.from_stop.stop.city }} → {{ booking.to_stop.stop.city }}</td>
+              <td class="text-center">{{ booking.seats_count }}</td>
+              <td class="text-end text-nowrap">{{ booking.price|floatformat:2 }} BYN</td>
+              <td class="text-nowrap">
+                {{ booking.get_status_display }}
+                {% if booking.created_by and booking.created_by != booking.passenger %}<div class="small text-muted-soft"><i class="bi bi-telephone"></i> по звонку</div>{% endif %}
+              </td>
+              <td class="text-end">
+                {% if booking.cancellable %}
+                  <form method="post" action="{% url 'bookings:cancel' booking.pk %}" class="m-0" onsubmit="return confirm('Отменить бронь {{ booking.code }}?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Отменить</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-center text-muted-soft py-5">На этот рейс пока никто не забронировал.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

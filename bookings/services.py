@@ -1,0 +1,89 @@
+"""
+Создание и отмена броней (алгоритм 3 из ТЗ, ФТ-4, ФТ-5, ФТ-14).
+
+Главная опасность при бронировании: два человека одновременно покупают
+последнее место. Оба видят «свободно 1», оба нажимают «Забронировать»,
+и место продаётся дважды.
+
+Защита: перед проверкой мест мы блокируем строку рейса в базе
+(SELECT ... FOR UPDATE). Второй покупатель ждёт, пока первый закончит,
+и только потом считает свободные места, уже с учётом первой брони.
+Блокировка снимается сама в конце транзакции.
+
+На SQLite блокировки строк нет (там вся база блокируется на запись),
+поэтому настоящая проверка одновременных броней делается на PostgreSQL.
+"""
+
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+
+from accounts.models import User
+from transport.models import Trip
+from transport.search import free_seats
+
+from .models import Booking
+
+
+class BookingError(Exception):
+    """Бронь нельзя создать или отменить. Текст ошибки показываем пользователю."""
+
+
+def create_booking(*, trip, from_stop, to_stop, seats_count, passenger_name,
+                   passenger_phone, passenger=None, created_by=None):
+    """
+    Создаёт бронь, если на участке хватает мест. Иначе выбрасывает BookingError.
+
+    passenger — аккаунт пассажира (пусто, если диспетчер бронирует человеку без аккаунта),
+    created_by — кто оформил бронь (сам пассажир или диспетчер).
+    """
+    with transaction.atomic():
+        # Блокируем рейс: пока транзакция не закончится, другие брони на этот рейс ждут.
+        trip = Trip.objects.select_for_update().get(pk=trip.pk)
+
+        if trip.status != Trip.Status.SCHEDULED:
+            raise BookingError("Рейс отменён или уже выполнен.")
+        if from_stop.route_id != trip.route_id or to_stop.route_id != trip.route_id:
+            raise BookingError("Остановки не относятся к маршруту этого рейса.")
+        if from_stop.order >= to_stop.order:
+            raise BookingError("Остановка посадки должна быть раньше остановки высадки.")
+        if trip.time_at(from_stop) <= timezone.now():
+            raise BookingError("Машина уже отправилась с этой остановки.")
+        if seats_count < 1:
+            raise BookingError("Укажите хотя бы одно место.")
+
+        available = free_seats(trip, from_stop, to_stop)
+        if seats_count > available:
+            if available == 0:
+                raise BookingError("На этом участке мест больше нет.")
+            raise BookingError(f"На этом участке осталось мест: {available}.")
+
+        booking = Booking(
+            trip=trip, from_stop=from_stop, to_stop=to_stop, seats_count=seats_count,
+            passenger=passenger, passenger_name=passenger_name, passenger_phone=passenger_phone,
+            created_by=created_by, price=0,
+        )
+        booking.price = booking.calculate_price()
+        booking.full_clean()
+        booking.save()
+        return booking
+
+
+def find_passenger(phone):
+    """Аккаунт пассажира с таким телефоном, если он зарегистрирован (для брони по звонку)."""
+    return User.objects.filter(phone=phone, role=User.Role.PASSENGER).first()
+
+
+def cancel_booking(booking, user):
+    """Отменяет бронь, если user имеет на это право (см. Booking.can_cancel)."""
+    if not booking.can_cancel(user):
+        if booking.status != Booking.Status.ACTIVE:
+            raise BookingError("Эта бронь уже не активна.")
+        raise BookingError(
+            "Отменить бронь можно не позже чем за "
+            f"{settings.BOOKING_CANCEL_HOURS} ч до отправления. Позвоните диспетчеру."
+        )
+    booking.status = Booking.Status.CANCELLED
+    booking.cancelled_at = timezone.now()
+    booking.save(update_fields=["status", "cancelled_at"])
+    return booking

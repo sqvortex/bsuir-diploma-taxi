@@ -8,6 +8,7 @@ admin.site.site_title = settings.SITE_NAME
 urlpatterns = [
     path("", include("core.urls")),
     path("accounts/", include("accounts.urls")),
+    path("bookings/", include("bookings.urls")),
     path("dispatch/", include("dispatch.urls")),
     path("admin/", admin.site.urls),
 ]

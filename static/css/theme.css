@@ -347,3 +347,83 @@ main {
 .stops-table .form-select {
   min-width: 90px;
 }
+
+/* ---------- Бронирование ---------- */
+.seats-stepper {
+  max-width: 180px;
+}
+
+.seats-stepper .form-control {
+  text-align: center;
+  font-weight: 700;
+}
+
+.booking-summary {
+  position: sticky;
+  top: 88px;
+}
+
+/* Билет: шапка цвета бренда, «линия отрыва» с вырезами по бокам */
+.ticket {
+  max-width: 520px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.ticket-head {
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: #fff;
+  padding: 1.5rem;
+}
+
+.ticket-body {
+  padding: 1.5rem;
+}
+
+.ticket-foot {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.ticket-cut {
+  position: relative;
+  border-top: 2px dashed var(--line);
+  margin: 1.5rem -1.5rem;
+}
+
+.ticket-cut::before,
+.ticket-cut::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--page);
+  border: 1px solid var(--line);
+}
+
+.ticket-cut::before { left: -12px; }
+.ticket-cut::after { right: -12px; }
+
+.ticket-status {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ticket-status.is-active { background: #fff; color: var(--ok); }
+.ticket-status.is-cancelled { background: rgba(0, 0, 0, 0.25); }
+
+.booking-card {
+  border-left: 4px solid var(--brand);
+}
+
+.booking-card.is-cancelled {
+  border-left-color: var(--line);
+  opacity: 0.7;
+}

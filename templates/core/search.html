@@ -44,7 +44,11 @@
           </div>
           <div class="col-6 col-md-2 text-end">
             <div class="price fs-4">{{ offer.price|floatformat:2 }} <small>BYN</small></div>
-            <button class="btn btn-primary btn-sm mt-2 w-100" disabled title="Бронирование появится на этапе 4">Выбрать</button>
+            {% if offer.free_seats %}
+              <a class="btn btn-primary btn-sm mt-2 w-100" href="{% url 'bookings:book' offer.trip.pk %}?from={{ offer.from_stop.pk }}&to={{ offer.to_stop.pk }}">Выбрать</a>
+            {% else %}
+              <button class="btn btn-primary btn-sm mt-2 w-100" disabled>Выбрать</button>
+            {% endif %}
           </div>
         </div>
       </div>
