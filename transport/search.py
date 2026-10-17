@@ -2,8 +2,8 @@
 Поиск рейсов с учётом промежуточных остановок (алгоритм 1 из ТЗ)
 и подсчёт свободных мест на участке (алгоритм 2).
 
-Это базовая версия для показа на сайте. Защита от двойной продажи
-(транзакция и блокировка рейса) появится на этапе 4 вместе с бронированием.
+Защита от двойной продажи (транзакция и блокировка рейса)
+находится в bookings/services.py.
 """
 
 from dataclasses import dataclass
@@ -57,6 +57,27 @@ def free_seats(trip, from_stop, to_stop):
         or 0
     )
     return max(trip.capacity - taken, 0)
+
+
+def free_seats_by_segment(trip, stops):
+    """
+    Свободные места для всех пар «посадка → высадка» рейса сразу.
+    Нужно странице брони, чтобы при смене остановок число мест обновлялось без перезагрузки.
+    Возвращает словарь {(id посадки, id высадки): свободно}.
+    """
+    from bookings.models import Booking
+
+    taken = list(
+        Booking.objects.filter(trip=trip, status__in=Booking.OCCUPYING_STATUSES)
+        .values_list("from_stop__order", "to_stop__order", "seats_count")
+    )
+    result = {}
+    for a in stops:
+        for b in stops:
+            if a.order < b.order:
+                busy = sum(seats for start, end, seats in taken if start < b.order and end > a.order)
+                result[(a.pk, b.pk)] = max(trip.capacity - busy, 0)
+    return result
 
 
 def find_trips(from_city, to_city, day):

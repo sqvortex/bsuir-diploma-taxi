@@ -30,6 +30,7 @@
         </div>
         <div class="col-4 col-md-3 text-end">
           {% if trip.status != 'scheduled' %}<span class="badge text-bg-light me-2">{{ trip.get_status_display }}</span>{% endif %}
+          <a class="btn btn-sm btn-light" href="{% url 'dispatch:trip_bookings' trip.pk %}" title="Брони и бронь по звонку"><i class="bi bi-people"></i> {{ trip.bookings_count }}</a>
           <a class="btn btn-sm {% if trip.needs_attention %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'dispatch:trip_edit' trip.pk %}">
             {% if trip.needs_attention %}Назначить{% else %}Изменить{% endif %}
           </a>

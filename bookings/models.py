@@ -4,14 +4,19 @@
 Бронь занимает места не на весь рейс, а только на участке между
 остановкой посадки и остановкой высадки (ФТ-4). Благодаря этому одно
 и то же место можно продать дважды на непересекающиеся участки
-(Минск – Бобруйск и Бобруйск – Гомель). Сам расчёт свободных мест и
-защита от двойной продажи появятся на этапе «Поиск и бронирование».
+(Минск – Бобруйск и Бобруйск – Гомель).
+
+Создание и отмена броней вынесены в bookings/services.py: там же
+защита от двойной продажи последнего места.
 """
+
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from accounts.models import phone_validator
 from transport.models import RouteStop, Trip
@@ -88,3 +93,36 @@ class Booking(models.Model):
     @property
     def occupies_seats(self):
         return self.status in self.OCCUPYING_STATUSES
+
+    @property
+    def code(self):
+        """Номер брони для пассажира и водителя, например VG-000042."""
+        return f"VG-{self.pk:06d}"
+
+    @property
+    def departure(self):
+        """Когда машина будет на остановке посадки."""
+        return self.trip.time_at(self.from_stop)
+
+    @property
+    def arrival(self):
+        return self.trip.time_at(self.to_stop)
+
+    @property
+    def cancel_deadline(self):
+        """До какого момента пассажир может отменить бронь сам (ФТ-5)."""
+        return self.departure - timedelta(hours=settings.BOOKING_CANCEL_HOURS)
+
+    def can_cancel(self, user):
+        """
+        Может ли user отменить эту бронь.
+        Пассажир: свою активную бронь не позже чем за BOOKING_CANCEL_HOURS часов до посадки.
+        Диспетчер и администратор: любую активную бронь до отправления
+        (например, если пассажир позвонил в последний момент).
+        """
+        if self.status != self.Status.ACTIVE:
+            return False
+        now = timezone.now()
+        if user.is_dispatcher or user.is_admin_role:
+            return now < self.departure
+        return self.passenger_id == user.pk and now < self.cancel_deadline
