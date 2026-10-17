@@ -1,0 +1,78 @@
+{% load static %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Montserrat+Alternates:wght@700&display=swap" rel="stylesheet">
+  {# Bootstrap лежит в проекте (static/vendor), поэтому сайт выглядит одинаково и без интернета #}
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/theme.css' %}" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-md site-nav sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
+        <span class="brand-mark"><i class="bi bi-bus-front"></i></span>
+        <span class="brand-name">{{ LOGO_MAIN }}<span class="brand-accent">{{ LOGO_ACCENT }}</span></span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Меню">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:search' %}">Найти рейс</a></li>
+        </ul>
+        <ul class="navbar-nav align-items-md-center gap-md-2">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{% url 'core:cabinet' %}">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span>{{ user.first_name|default:user.phone }}</span>
+                <span class="role-pill">{{ user.get_role_display }}</span>
+              </a>
+            </li>
+            {% if user.is_staff %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Управление</a></li>
+            {% endif %}
+            <li class="nav-item">
+              <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
+                {% csrf_token %}
+                <button class="btn btn-link nav-link" type="submit">Выйти</button>
+              </form>
+            </li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Войти</a></li>
+            <li class="nav-item"><a class="btn btn-primary btn-sm px-3" href="{% url 'accounts:register' %}">Регистрация</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    {% if messages %}
+      <div class="container mt-3">
+        {% for message in messages %}
+          <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer py-4 mt-5">
+    <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+      <span>© {% now "Y" %} {{ SITE_NAME }}. {{ SITE_TAGLINE }}.</span>
+      <span>Оплата водителю при посадке</span>
+    </div>
+  </footer>
+
+  <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

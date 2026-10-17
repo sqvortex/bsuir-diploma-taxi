@@ -1,0 +1,26 @@
+{# Строка рейса с полосой загрузки: для водителя, диспетчера и администратора. #}
+<div class="card-soft p-3 mb-2">
+  <div class="row align-items-center g-2">
+    <div class="col-3 col-md-2">
+      <div class="trip-time">{{ trip.departure_at|time:"H:i" }}</div>
+      <div class="small text-muted-soft">{{ trip.departure_at|date:"d.m, D" }}</div>
+    </div>
+    <div class="col-9 col-md-4">
+      <div class="fw-semibold">{{ trip.route }}</div>
+      <div class="small text-muted-soft">
+        {% if trip.vehicle %}{{ trip.vehicle.plate_number }}{% else %}<span class="text-danger">машина не назначена</span>{% endif %}
+        {% if show_driver %}· {% if trip.driver %}{{ trip.driver.get_full_name|default:trip.driver.phone }}{% else %}<span class="text-danger">водитель не назначен</span>{% endif %}{% endif %}
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="d-flex justify-content-between small mb-1">
+        <span>Занято {{ trip.booked }} из {{ trip.capacity }}</span>
+        <span class="text-muted-soft">{{ trip.load_percent }}%</span>
+      </div>
+      <div class="load-bar"><span style="width: {{ trip.load_percent }}%"></span></div>
+    </div>
+    <div class="col-12 col-md-2 text-md-end">
+      <span class="small text-muted-soft">броней: {{ trip.bookings_count }}</span>
+    </div>
+  </div>
+</div>

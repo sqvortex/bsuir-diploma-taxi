@@ -1,5 +1,5 @@
 """
-Настройки проекта «МаршрутБай».
+Настройки проекта Viago.
 
 Секретные и зависящие от сервера значения берутся из переменных окружения,
 чтобы не хранить их в коде. Для локальной разработки всё работает
@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "accounts",   # пользователи и роли
     "transport",  # остановки, маршруты, автопарк, расписание и рейсы
     "bookings",   # бронирования мест
+    "core",       # общие страницы: главная, поиск, кабинеты
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.site",
             ],
         },
     },
@@ -109,9 +111,24 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Правила бронирования (ФТ-5): за сколько часов до отправления ещё можно отменить бронь.
 BOOKING_CANCEL_HOURS = 2
+
+
+# Вход и выход: куда отправлять пользователя.
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "core:cabinet"
+LOGOUT_REDIRECT_URL = "core:home"
+
+
+# Название сервиса. Меняется здесь одной строкой и подставляется на всех страницах.
+# Цвета сайта лежат в одном месте: static/css/theme.css (блок :root).
+SITE_NAME = os.environ.get("SITE_NAME", "Viago")
+SITE_TAGLINE = "Твой путь по Беларуси"
+# Окончание названия, которое в логотипе выделяется цветом (Via + go). Пустая строка: без выделения.
+SITE_LOGO_ACCENT = "go"

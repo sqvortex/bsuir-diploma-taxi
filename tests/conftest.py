@@ -1,6 +1,6 @@
 """Общие заготовки (фикстуры) для тестов: маршрут с остановками, машина, рейс."""
 
-from datetime import date, time
+from datetime import date, time, timedelta
 from decimal import Decimal
 
 import pytest
@@ -42,5 +42,5 @@ def trip(route, driver):
     )
     return Trip.objects.create(
         route=route, template=template, vehicle=vehicle, driver=driver,
-        departure_at=template.departure_on(date(2026, 11, 2)),
+        departure_at=template.departure_on(date.today() + timedelta(days=7)),
     )

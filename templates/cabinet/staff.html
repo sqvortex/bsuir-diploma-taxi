@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Панель · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% if user.is_admin_role %}
+    {% include "cabinet/_header.html" with title="Панель администратора" %}
+  {% else %}
+    {% include "cabinet/_header.html" with title="Панель диспетчера" %}
+  {% endif %}
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card-soft stat-tile"><div class="value">{{ stats.trips_today }}</div><div class="label">рейсов сегодня</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card-soft stat-tile"><div class="value">{{ stats.trips_week }}</div><div class="label">рейсов за 7 дней</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card-soft stat-tile"><div class="value">{{ stats.bookings_active }}</div><div class="label">активных броней</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card-soft stat-tile"><div class="value">{{ stats.seats_sold }}</div><div class="label">мест забронировано</div></div></div>
+  </div>
+
+  <div class="row g-4">
+    <div class="{% if users_by_role %}col-lg-8{% else %}col-12{% endif %}">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Рейсы на {{ today|date:"j E" }}</h2>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'admin:transport_trip_changelist' %}">Все рейсы</a>
+      </div>
+      {% for trip in trips %}
+        {% include "cabinet/_trip_row.html" with show_driver=True %}
+      {% empty %}
+        <div class="card-soft p-4 text-center text-muted-soft">Сегодня рейсов нет.</div>
+      {% endfor %}
+    </div>
+
+    {% if users_by_role %}
+      <div class="col-lg-4">
+        <h2 class="h5 fw-bold mb-3">Пользователи</h2>
+        <div class="card-soft">
+          <ul class="list-group list-group-flush">
+            {% for label, count in users_by_role %}
+              <li class="list-group-item d-flex justify-content-between bg-transparent"><span>{{ label }}</span><span class="fw-bold">{{ count }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <a class="btn btn-primary w-100 mt-3" href="{% url 'admin:accounts_user_changelist' %}"><i class="bi bi-people"></i> Управлять пользователями</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
