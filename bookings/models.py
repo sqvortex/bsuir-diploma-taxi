@@ -67,6 +67,8 @@ class Booking(models.Model):
     # Не auto_now_add, чтобы генератор истории (этап 6) мог задать дату брони в прошлом.
     created_at = models.DateTimeField("создана", default=timezone.now)
     cancelled_at = models.DateTimeField("отменена", null=True, blank=True)
+    # Когда отправили напоминание о поездке (ФТ-7). Пусто: ещё не отправляли.
+    reminded_at = models.DateTimeField("напоминание отправлено", null=True, blank=True)
 
     class Meta:
         verbose_name = "бронь"

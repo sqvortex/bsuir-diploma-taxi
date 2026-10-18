@@ -60,10 +60,10 @@ VEHICLES = [
 class Command(BaseCommand):
     help = "Создаёт демо-данные: маршруты, автопарк, пользователей всех ролей, рейсы на две недели и брони"
 
-    def get_user(self, phone, first_name, last_name, role):
+    def get_user(self, phone, first_name, last_name, role, email=""):
         user, _ = User.objects.update_or_create(
             phone=phone,
-            defaults={"first_name": first_name, "last_name": last_name, "role": role},
+            defaults={"first_name": first_name, "last_name": last_name, "role": role, "email": email},
         )
         user.set_password(DEMO_PASSWORD)  # у демо-пользователей всегда один и тот же пароль
         user.save()
@@ -80,7 +80,8 @@ class Command(BaseCommand):
             self.get_user("+375291111113", "Пётр", "Новиков", User.Role.DRIVER),
         ]
         self.get_user("+375292222222", "Наталья", "Сидорова", User.Role.DISPATCHER)
-        passenger = self.get_user("+375293333333", "Анна", "Ковалёва", User.Role.PASSENGER)
+        passenger = self.get_user("+375293333333", "Анна", "Ковалёва", User.Role.PASSENGER,
+                                  email="anna@example.com")
 
         vehicles = [
             Vehicle.objects.get_or_create(
