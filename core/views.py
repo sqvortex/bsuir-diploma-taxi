@@ -73,12 +73,13 @@ def search(request):
 def add_forecast(offers):
     """Прогноз свободных мест к отправлению для найденных рейсов (ФТ-3), если модель обучена."""
     upcoming = [offer for offer in offers if offer.departure > timezone.now() and offer.free_seats]
-    forecasts = forecast_model.predict(Trip.objects.filter(pk__in=[o.trip.pk for o in upcoming]))
+    forecasts = forecast_model.predict_cached([o.trip for o in upcoming])
     for offer in upcoming:
         if offer.trip.pk in forecasts:
-            offer.forecast_free = forecasts[offer.trip.pk].free_range(
-                offer.from_stop.order, offer.to_stop.order
-            )
+            low, high = forecasts[offer.trip.pk].free_range(offer.from_stop.order, offer.to_stop.order)
+            # Прогноз мог устареть на минуту: больше мест, чем свободно сейчас, не обещаем.
+            high = min(high, offer.free_seats)
+            offer.forecast_free = (min(low, high), high)
 
 
 @login_required

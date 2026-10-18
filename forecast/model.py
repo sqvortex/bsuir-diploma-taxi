@@ -22,8 +22,10 @@ import joblib
 import numpy as np
 import pandas as pd
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 from sklearn.ensemble import HistGradientBoostingRegressor
+from threadpoolctl import threadpool_limits
 
 from transport.models import Trip
 
@@ -212,7 +214,10 @@ def predict(trips, now=None, bundle=None):
     table = current_table(trips, now=now)
     if table.empty:
         return {}
-    raw = bundle["model"].predict(to_matrix(table, bundle["routes"]))
+    # Для нескольких строк один поток быстрее: потоки OpenMP не мешают друг другу,
+    # когда сайт обслуживает много запросов одновременно.
+    with threadpool_limits(1):
+        raw = bundle["model"].predict(to_matrix(table, bundle["routes"]))
     # Уже проданные места никуда не денутся (почти): прогноз не может быть меньше проданного.
     # И не может быть больше вместимости: больше мест, чем в машине, не продать.
     table = table.assign(expected=np.clip(np.maximum(raw, table["sold"]), 0, table["capacity"]))
@@ -231,4 +236,28 @@ def predict(trips, now=None, bundle=None):
             for row in part.sort_values("leg").itertuples()
         ]
         result[int(trip_id)] = TripForecast(trip_id=int(trip_id), capacity=capacity, days_before=days, legs=legs)
+    return result
+
+
+def predict_cached(trips, now=None):
+    """
+    То же, что predict, но готовые прогнозы рейсов 60 секунд лежат в кеше. Нужно для страницы
+    поиска: её открывают много людей сразу, а прогноз на одну минуту почти не меняется.
+    Прогнозы пассажиру показываются вместе с реальным числом свободных мест, поэтому
+    устаревшие на минуту данные не дают лишнего (см. core/views.py, add_forecast).
+    """
+    bundle = load()
+    if bundle is None:
+        return {}
+    trips = list(trips)
+    stamp = bundle["trained_at"].timestamp()
+    key = lambda trip: f"forecast:{stamp}:{trip.pk}:{trip.departure_at.timestamp()}"  # noqa: E731
+    found = cache.get_many([key(trip) for trip in trips])
+    result = {trip.pk: found[key(trip)] for trip in trips if key(trip) in found}
+    missing = [trip for trip in trips if trip.pk not in result]
+    if missing:
+        fresh = predict(Trip.objects.filter(pk__in=[trip.pk for trip in missing]), now=now, bundle=bundle)
+        cache.set_many({key(trip): fresh[trip.pk] for trip in missing if trip.pk in fresh},
+                       settings.FORECAST_CACHE_SECONDS)
+        result.update(fresh)
     return result

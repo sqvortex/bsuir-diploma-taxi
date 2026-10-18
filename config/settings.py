@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # отдаёт стили и скрипты, когда сайт запущен через gunicorn
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -116,6 +117,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT.mkdir(exist_ok=True)  # WhiteNoise ругается, если папки нет, даже когда collectstatic не запускали
+# Без предварительной команды collectstatic берём файлы прямо из папки static/.
+WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -132,6 +136,10 @@ LOGIN_REDIRECT_URL = "core:cabinet"
 LOGOUT_REDIRECT_URL = "core:home"
 
 
+# Куда команда backup_db складывает резервные копии базы.
+BACKUP_DIR = BASE_DIR / "backups"
+
+
 # Название сервиса. Меняется здесь одной строкой и подставляется на всех страницах.
 # Цвета сайта лежат в одном месте: static/css/theme.css (блок :root).
 SITE_NAME = os.environ.get("SITE_NAME", "Viago")
@@ -141,6 +149,8 @@ SITE_LOGO_ACCENT = "go"
 
 # Файл обученной модели прогноза (создаётся командой python manage.py train_forecast).
 FORECAST_MODEL_PATH = BASE_DIR / "var" / "forecast_model.joblib"
+# На сколько секунд страница поиска запоминает прогноз рейса (экономит время при большом числе посетителей).
+FORECAST_CACHE_SECONDS = 60
 
 
 # Письма пассажирам (ФТ-7). По умолчанию письма печатаются в консоль, где запущен сайт,
