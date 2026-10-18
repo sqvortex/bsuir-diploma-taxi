@@ -26,6 +26,21 @@ class TripOffer:
     arrival: datetime
     price: Decimal
     free_seats: int
+    forecast_free: tuple = None  # прогноз свободных мест к отправлению (от, до), если модель обучена
+
+    @property
+    def forecast_text(self):
+        """Например: «к отправлению останется 0–2 места»."""
+        if not self.forecast_free:
+            return ""
+        low, high = self.forecast_free
+        amount = f"{low}" if low == high else f"{low}–{high}"
+        return f"к отправлению останется {amount} {seats_word(high)}"
+
+    @property
+    def forecast_is_hot(self):
+        """Мест к отправлению почти не останется: стоит бронировать заранее."""
+        return bool(self.forecast_free) and self.forecast_free[0] <= 2
 
     @property
     def duration_minutes(self):
@@ -35,6 +50,15 @@ class TripOffer:
     def duration_display(self):
         hours, minutes = divmod(self.duration_minutes, 60)
         return f"{hours} ч {minutes:02d} мин" if hours else f"{minutes} мин"
+
+
+def seats_word(number):
+    """Слово «место» в нужной форме: 1 место, 2 места, 5 мест."""
+    if number % 10 == 1 and number % 100 != 11:
+        return "место"
+    if number % 10 in (2, 3, 4) and number % 100 not in (12, 13, 14):
+        return "места"
+    return "мест"
 
 
 def free_seats(trip, from_stop, to_stop):

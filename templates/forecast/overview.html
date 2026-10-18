@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Прогноз · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  {% include "dispatch/_nav.html" with active="forecast" %}
+
+  <h1 class="h4 fw-bold mb-1">Прогноз загрузки на 14 дней</h1>
+  <p class="text-muted-soft mb-4">Сколько мест займут к отправлению по статистике прошлых рейсов, и что с этим делать.</p>
+
+  {% if not bundle %}
+    <div class="card-soft p-5 text-center">
+      <div class="feature-icon mb-3"><i class="bi bi-graph-up-arrow"></i></div>
+      <h2 class="h5 fw-bold">Модель прогноза ещё не обучена</h2>
+      <p class="text-muted-soft mb-2">Создайте историю рейсов и обучите модель командами:</p>
+      <code>python manage.py generate_history</code><br>
+      <code>python manage.py train_forecast</code>
+    </div>
+  {% else %}
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3"><div class="card-soft stat-tile h-100">
+        <div class="value text-ok">{{ report.model.wape }}%</div>
+        <div class="label">ошибка модели (WAPE)</div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="card-soft stat-tile h-100">
+        <div class="value">{{ report.baseline.wape }}%</div>
+        <div class="label">ошибка простого среднего</div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="card-soft stat-tile h-100">
+        <div class="value">±{{ report.model.mae }}</div>
+        <div class="label">места в среднем (у среднего ±{{ report.baseline.mae }})</div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="card-soft stat-tile h-100">
+        <div class="value">{{ bundle.trips }}</div>
+        <div class="label">рейсов в истории, обучена {{ bundle.trained_at|date:"d.m.Y" }}</div>
+      </div></div>
+    </div>
+
+    <div class="card-soft p-3 p-md-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h2 class="h6 fw-bold mb-0">Пассажиры по дням</h2>
+        <span class="small text-muted-soft">Нажмите на день, чтобы увидеть его рейсы</span>
+      </div>
+      <div style="height: 280px"><canvas id="forecast-chart"></canvas></div>
+    </div>
+
+    {% if recommendations %}
+      <h2 class="h5 fw-bold mb-3">Рекомендации</h2>
+      <div class="row g-2 mb-4">
+        {% for rec in recommendations %}
+          <div class="col-md-6">
+            <a class="card-soft card-hover rec-card is-{{ rec.kind }} d-block text-reset text-decoration-none p-3 h-100" href="{% url 'dispatch:trip_edit' rec.trip.pk %}">
+              <div class="d-flex gap-3">
+                <div class="rec-icon"><i class="bi {% if rec.kind == 'full' %}bi-people-fill{% else %}bi-arrows-collapse{% endif %}"></i></div>
+                <div>
+                  <div class="fw-semibold">{{ rec.trip.route }}, {{ rec.trip.departure_at|date:"j E, H:i" }}</div>
+                  <div class="small text-muted-soft">{{ rec.text }}</div>
+                </div>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <h2 class="h5 fw-bold mb-0">Рейсы на {{ selected|date:"j E, l" }}</h2>
+      <div class="legend small text-muted-soft d-flex gap-3">
+        <span><span class="legend-dot is-sold"></span> продано</span>
+        <span><span class="legend-dot is-extra"></span> ожидается ещё</span>
+      </div>
+    </div>
+    {% for row in rows %}
+      <div class="card-soft p-3 mb-2">
+        <div class="row align-items-center g-2">
+          <div class="col-3 col-md-1"><div class="trip-time">{{ row.trip.departure_at|time:"H:i" }}</div></div>
+          <div class="col-9 col-md-3">
+            <div class="fw-semibold">{{ row.trip.route }}</div>
+            <div class="small text-muted-soft">{{ row.trip.vehicle.brand }}, {{ row.trip.capacity }} мест</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Продано {{ row.sold }}, ожидается {{ row.expected }} из {{ row.trip.capacity }}</span>
+              <span class="text-muted-soft">{{ row.forecast.load_percent }}%</span>
+            </div>
+            <div class="load-bar is-forecast">
+              <span style="width: {{ row.sold_percent }}%"></span><span class="extra" style="width: {{ row.extra_percent }}%"></span>
+            </div>
+          </div>
+          <div class="col-6 col-md-2 small">
+            свободно к отправлению:<br><span class="fw-bold">{% if row.free.0 == row.free.1 %}{{ row.free.0 }}{% else %}{{ row.free.0 }}–{{ row.free.1 }}{% endif %}</span>
+          </div>
+          <div class="col-6 col-md-2 text-end">
+            {% if row.advice %}
+              <span class="advice-pill is-{{ row.advice.kind }}">{% if row.advice.kind == "full" %}мест не хватит{% else %}низкая загрузка{% endif %}</span>
+            {% else %}
+              <span class="advice-pill is-ok">норма</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card-soft p-4 text-center text-muted-soft">В этот день рейсов нет.</div>
+    {% endfor %}
+
+    <details class="mt-4">
+      <summary class="fw-semibold">Как считается точность</summary>
+      <div class="small text-muted-soft mt-2">
+        Модель обучена на рейсах до {{ report.split_date }} ({{ report.train_trips }} рейсов) и проверена на {{ report.test_trips }} рейсах после этой даты, которых она не видела.
+        Ошибка — насколько прогноз числа свободных мест к отправлению отличается от факта:
+        WAPE — сумма ошибок, делённая на сумму свободных мест. Простое среднее — средняя загрузка таких же рейсов (маршрут, участок, день недели, время) за 4 прошлые недели.
+        <table class="table table-sm mt-2 mb-0" style="max-width: 520px">
+          <thead><tr><th>Дней до отправления</th><th class="text-end">Модель</th><th class="text-end">Простое среднее</th></tr></thead>
+          <tbody>
+            {% for days, row in report.by_horizon.items %}
+              <tr><td>{{ days }}</td><td class="text-end">{{ row.model.wape }}%</td><td class="text-end">{{ row.baseline.wape }}%</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {% if bundle %}
+    {{ chart|json_script:"chart-data" }}
+    <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+    <script>
+      // График: продано сейчас + ожидается ещё (столбцы) и всего мест в рейсах дня (линия).
+      (function () {
+        const data = JSON.parse(document.getElementById("chart-data").textContent);
+        const selected = "{{ selected|date:'Y-m-d' }}";
+        const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        let chart;
+
+        function draw() {
+          if (chart) chart.destroy();
+          const brand = css("--brand"), muted = css("--muted"), line = css("--line");
+          Chart.defaults.font.family = css("--bs-body-font-family");
+          Chart.defaults.color = muted;
+          chart = new Chart(document.getElementById("forecast-chart"), {
+            data: {
+              labels: data.labels,
+              datasets: [
+                { type: "bar", label: "Продано", data: data.sold, stack: "load",
+                  backgroundColor: data.dates.map((d) => d === selected ? brand : brand + "cc"), borderRadius: 4 },
+                { type: "bar", label: "Ожидается ещё", data: data.extra, stack: "load",
+                  backgroundColor: brand + "40", borderRadius: 4 },
+                { type: "line", label: "Всего мест", data: data.capacity,
+                  borderColor: muted, borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5 },
+              ],
+            },
+            options: {
+              maintainAspectRatio: false,
+              interaction: { mode: "index", intersect: false },
+              scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, grid: { color: line } },
+              },
+              plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } },
+              onClick: (event, elements) => {
+                if (elements.length) window.location.search = "?date=" + data.dates[elements[0].index];
+              },
+            },
+          });
+        }
+        draw();
+        document.addEventListener("themechange", draw);
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

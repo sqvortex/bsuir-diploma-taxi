@@ -575,3 +575,62 @@ main {
 
 .text-ok { color: var(--ok); }
 .text-bad { color: var(--danger); }
+
+/* ---------- Прогноз ---------- */
+.load-bar.is-forecast {
+  display: flex;
+}
+
+.load-bar.is-forecast > span.extra {
+  background: rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--brand);
+  vertical-align: -1px;
+}
+
+.legend-dot.is-extra { background: rgba(var(--bs-primary-rgb), 0.3); }
+
+.rec-card { border-left: 4px solid var(--brand); }
+.rec-card.is-full { border-left-color: var(--danger); }
+.rec-card.is-low { border-left-color: var(--warn); }
+
+.rec-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+.is-full .rec-icon { background: var(--danger-bg); color: var(--danger); }
+.is-low .rec-icon { background: var(--warn-bg); color: var(--warn); }
+
+.advice-pill {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.advice-pill.is-full { background: var(--danger-bg); color: var(--danger); }
+.advice-pill.is-low { background: var(--warn-bg); color: var(--warn); }
+.advice-pill.is-ok { background: var(--ok-bg); color: var(--ok); }
+
+.seats-forecast {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.seats-forecast.is-hot {
+  color: var(--warn);
+  font-weight: 600;
+}
