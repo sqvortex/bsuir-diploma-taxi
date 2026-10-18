@@ -1,7 +1,11 @@
 {% load static %}<!doctype html>
-<html lang="ru">
+<html lang="ru" data-bs-theme="light">
 <head>
   <meta charset="utf-8">
+  {# Тему ставим до загрузки стилей, чтобы страница не мигала светлой при тёмной теме #}
+  <script>
+    try { if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-bs-theme", "dark"); } catch (e) {}
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +22,10 @@
         <span class="brand-mark"><i class="bi bi-bus-front"></i></span>
         <span class="brand-name">{{ LOGO_MAIN }}<span class="brand-accent">{{ LOGO_ACCENT }}</span></span>
       </a>
+      {# Кнопка темы стоит вне меню, чтобы на телефоне была видна сразу #}
+      <button class="theme-toggle ms-auto ms-md-2 order-md-last" type="button" id="theme-toggle" aria-label="Сменить тему">
+        <i class="bi bi-moon-stars"></i>
+      </button>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Меню">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -77,5 +85,26 @@
   </footer>
 
   <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+  <script>
+    // Кнопка смены темы: запоминаем выбор в браузере, чтобы он сохранялся между страницами.
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("theme-toggle");
+      const icon = button.querySelector("i");
+      function show(theme) {
+        icon.className = theme === "dark" ? "bi bi-sun" : "bi bi-moon-stars";
+        button.title = theme === "dark" ? "Светлая тема" : "Тёмная тема";
+      }
+      show(root.getAttribute("data-bs-theme"));
+      button.addEventListener("click", function () {
+        const theme = root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
+        root.setAttribute("data-bs-theme", theme);
+        try { localStorage.setItem("theme", theme); } catch (e) {}
+        show(theme);
+        document.dispatchEvent(new CustomEvent("themechange", { detail: theme }));
+      });
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

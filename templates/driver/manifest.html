@@ -12,13 +12,13 @@
         {% if trip.vehicle %}· {{ trip.vehicle.plate_number }}{% endif %}
       </div>
     </div>
-    {% if trip.status != "scheduled" %}<span class="badge text-bg-light fs-6">{{ trip.get_status_display }}</span>{% endif %}
+    {% if trip.status != "scheduled" %}<span class="badge bg-body-secondary text-body fs-6">{{ trip.get_status_display }}</span>{% endif %}
   </div>
 
   <div class="row g-2 mb-4">
     <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value">{{ summary.expected }}</div><div class="label">ждём</div></div></div>
-    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-success">{{ summary.boarded }}</div><div class="label">сели</div></div></div>
-    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-danger">{{ summary.no_show }}</div><div class="label">не явились</div></div></div>
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-ok">{{ summary.boarded }}</div><div class="label">сели</div></div></div>
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-bad">{{ summary.no_show }}</div><div class="label">не явились</div></div></div>
     <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value">{{ summary.collected|floatformat:0 }}<span class="fs-6 text-muted-soft"> / {{ summary.to_collect|floatformat:0 }}</span></div><div class="label">собрано, BYN</div></div></div>
   </div>
 

@@ -64,7 +64,8 @@ class Booking(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="+", verbose_name="кто оформил",
     )
-    created_at = models.DateTimeField("создана", auto_now_add=True)
+    # Не auto_now_add, чтобы генератор истории (этап 6) мог задать дату брони в прошлом.
+    created_at = models.DateTimeField("создана", default=timezone.now)
     cancelled_at = models.DateTimeField("отменена", null=True, blank=True)
 
     class Meta:

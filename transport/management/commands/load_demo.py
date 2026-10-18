@@ -21,7 +21,9 @@ from django.utils import timezone
 from accounts.models import User
 from bookings.models import Booking
 from transport.models import Route, RouteStop, ScheduleTemplate, Stop, Vehicle
+from forecast.simulation import simulate_bookings
 from transport.schedule import generate_trips
+from transport.search import free_seats
 
 DEMO_PASSWORD = "demo12345"
 
@@ -55,11 +57,8 @@ VEHICLES = [
     ("Ford Transit", "AK 9012-7", 14),
 ]
 
-PASSENGER_NAMES = ["Анна", "Дмитрий", "Ольга", "Сергей", "Мария", "Алексей", "Елена", "Павел"]
-
-
 class Command(BaseCommand):
-    help = "Создаёт демо-данные: маршруты, автопарк, пользователей всех ролей, рейсы на неделю и брони"
+    help = "Создаёт демо-данные: маршруты, автопарк, пользователей всех ролей, рейсы на две недели и брони"
 
     def get_user(self, phone, first_name, last_name, role):
         user, _ = User.objects.update_or_create(
@@ -72,7 +71,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        random.seed(42)  # одинаковые «случайные» брони при каждом запуске
+        self.rng = random.Random(42)  # одинаковые «случайные» брони при каждом запуске
 
         # У каждого маршрута свой водитель, чтобы рейсы одного водителя не пересекались по времени.
         drivers = [
@@ -114,8 +113,8 @@ class Command(BaseCommand):
                 template.default_vehicle, template.default_driver = vehicle, driver
                 template.save()
                 template.trips.update(vehicle=vehicle, driver=driver)
-                # Рейсы на неделю вперёд создаём так же, как это делает диспетчер.
-                result = generate_trips(timezone.localdate(), timezone.localdate() + timedelta(days=6), [template])
+                # Рейсы на две недели вперёд (горизонт прогноза) создаём так же, как это делает диспетчер.
+                result = generate_trips(timezone.localdate(), timezone.localdate() + timedelta(days=13), [template])
                 trips_created += result.created
                 for trip in template.trips.filter(departure_at__date__gte=timezone.localdate()):
                     shift = (timezone.localdate(trip.departure_at) - timezone.localdate()).days
@@ -131,28 +130,16 @@ class Command(BaseCommand):
         ))
 
     def add_bookings(self, trip, route_stops, passenger):
-        """Несколько броней на рейс, чтобы загрузка выглядела реалистично (+ бронь passenger, если он передан)."""
-        count = 0
-        free = trip.capacity
-        for _ in range(random.randint(2, 7)):
-            start = random.randint(0, len(route_stops) - 2)
-            end = random.randint(start + 1, len(route_stops) - 1)
-            seats = random.choice([1, 1, 1, 2])
-            if seats > free:
-                break
-            booking = Booking(
-                trip=trip,
-                passenger_name=random.choice(PASSENGER_NAMES),
-                passenger_phone=f"+37529{random.randint(1000000, 9999999)}",
-                from_stop=route_stops[start], to_stop=route_stops[end],
-                seats_count=seats, price=0,
-            )
-            booking.price = booking.calculate_price()
-            booking.save()
-            free -= seats
-            count += 1
+        """
+        Брони, которые к текущему моменту уже сделали на рейс. Они создаются по той же
+        модели спроса, что и история для прогноза (forecast/simulation.py),
+        поэтому прогноз на демо-данных выглядит правдоподобно.
+        """
+        bookings = simulate_bookings(self.rng, trip, route_stops, now=timezone.now())
+        Booking.objects.bulk_create(bookings)
+        count = len(bookings)
         # Бронь демо-пассажира, чтобы в его кабинете были поездки.
-        if passenger and free:
+        if passenger and free_seats(trip, route_stops[0], route_stops[-1]):
             booking = Booking(
                 trip=trip, passenger=passenger,
                 passenger_name=passenger.first_name, passenger_phone=passenger.phone,

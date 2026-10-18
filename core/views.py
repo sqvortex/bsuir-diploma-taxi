@@ -15,6 +15,7 @@ from django.utils.dateparse import parse_date
 
 from accounts.models import User
 from bookings.models import Booking
+from forecast import model as forecast_model
 from transport.models import Route, Stop, Trip
 from transport.search import find_trips
 
@@ -61,11 +62,23 @@ def search(request):
             form.cleaned_data["to_city"].strip(),
             form.cleaned_data["date"],
         )
+        add_forecast(offers)
     return render(request, "core/search.html", {
         "form": form,
         "offers": offers,
         "cities": city_choices(),
     })
+
+
+def add_forecast(offers):
+    """Прогноз свободных мест к отправлению для найденных рейсов (ФТ-3), если модель обучена."""
+    upcoming = [offer for offer in offers if offer.departure > timezone.now() and offer.free_seats]
+    forecasts = forecast_model.predict(Trip.objects.filter(pk__in=[o.trip.pk for o in upcoming]))
+    for offer in upcoming:
+        if offer.trip.pk in forecasts:
+            offer.forecast_free = forecasts[offer.trip.pk].free_range(
+                offer.from_stop.order, offer.to_stop.order
+            )
 
 
 @login_required

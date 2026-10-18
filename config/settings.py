@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "core",       # общие страницы: главная, поиск, кабинеты
     "dispatch",   # панель диспетчера: маршруты, автопарк, расписание, рейсы
     "driver",     # кабинет водителя: посадочная ведомость
+    "forecast",   # прогноз свободных мест и рекомендации
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,6 @@ SITE_NAME = os.environ.get("SITE_NAME", "Viago")
 SITE_TAGLINE = "Твой путь по Беларуси"
 # Окончание названия, которое в логотипе выделяется цветом (Via + go). Пустая строка: без выделения.
 SITE_LOGO_ACCENT = "go"
+
+# Файл обученной модели прогноза (создаётся командой python manage.py train_forecast).
+FORECAST_MODEL_PATH = BASE_DIR / "var" / "forecast_model.joblib"
