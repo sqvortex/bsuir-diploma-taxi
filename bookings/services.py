@@ -23,6 +23,7 @@ from transport.models import Trip
 from transport.search import free_seats
 
 from .models import Booking
+from .notifications import send_booking_confirmation
 
 
 class BookingError(Exception):
@@ -66,6 +67,8 @@ def create_booking(*, trip, from_stop, to_stop, seats_count, passenger_name,
         booking.price = booking.calculate_price()
         booking.full_clean()
         booking.save()
+        # Письмо уходит только после того, как бронь точно записана в базу.
+        transaction.on_commit(lambda: send_booking_confirmation(booking))
         return booking
 
 

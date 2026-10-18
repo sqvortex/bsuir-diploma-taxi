@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "dispatch",   # панель диспетчера: маршруты, автопарк, расписание, рейсы
     "driver",     # кабинет водителя: посадочная ведомость
     "forecast",   # прогноз свободных мест и рекомендации
+    "reports",    # отчёты за период и выгрузка в Excel
 ]
 
 MIDDLEWARE = [
@@ -140,3 +141,18 @@ SITE_LOGO_ACCENT = "go"
 
 # Файл обученной модели прогноза (создаётся командой python manage.py train_forecast).
 FORECAST_MODEL_PATH = BASE_DIR / "var" / "forecast_model.joblib"
+
+
+# Письма пассажирам (ФТ-7). По умолчанию письма печатаются в консоль, где запущен сайт,
+# чтобы всё работало без почтового сервера. Для настоящей почты задайте переменные
+# окружения EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend, EMAIL_HOST,
+# EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD.
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "") == "1"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", f"{SITE_NAME} <noreply@viago.local>")
+# Адрес сайта для ссылок в письмах.
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
