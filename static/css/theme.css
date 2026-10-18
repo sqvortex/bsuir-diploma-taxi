@@ -427,3 +427,83 @@ main {
   border-left-color: var(--line);
   opacity: 0.7;
 }
+
+/* ---------- Посадочная ведомость водителя ---------- */
+.manifest {
+  max-width: 760px;
+}
+
+.manifest-stops {
+  list-style: none;
+  padding: 0 0 0 1.25rem;
+  margin: 0;
+  border-left: 2px solid var(--brand-light);
+}
+
+.manifest-stop {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.manifest-stop::before {
+  content: "";
+  position: absolute;
+  left: calc(-1.25rem - 7px);
+  top: 0.4rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px var(--page);
+}
+
+.onboard-pill {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.passenger-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.6rem;
+  scroll-margin-top: 90px;  /* после отметки карточка не прячется под шапкой */
+}
+
+.passenger-card.is-boarded { border-left-color: var(--ok); }
+.passenger-card.is-no_show { border-left-color: #dc3545; opacity: 0.75; }
+
+.seats-chip {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.mark-pill {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.is-boarded .mark-pill { background: #e3f5ec; color: var(--ok); }
+.is-no_show .mark-pill { background: #fee2e2; color: #991b1b; }
+
+.btn-success {
+  --bs-btn-bg: var(--ok);
+  --bs-btn-border-color: var(--ok);
+  --bs-btn-hover-bg: #188059;
+  --bs-btn-hover-border-color: #188059;
+  font-weight: 600;
+}

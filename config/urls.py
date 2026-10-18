@@ -10,5 +10,6 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("bookings/", include("bookings.urls")),
     path("dispatch/", include("dispatch.urls")),
+    path("driver/", include("driver.urls")),
     path("admin/", admin.site.urls),
 ]

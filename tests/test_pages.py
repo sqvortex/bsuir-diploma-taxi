@@ -64,7 +64,7 @@ def test_cabinet_requires_login(client):
 
 @pytest.mark.parametrize("role, title", [
     (User.Role.PASSENGER, "Мои поездки"),
-    (User.Role.DRIVER, "Мои рейсы сегодня"),
+    (User.Role.DRIVER, "Мои рейсы"),
     (User.Role.DISPATCHER, "Панель диспетчера"),
     (User.Role.ADMIN, "Панель администратора"),
 ])

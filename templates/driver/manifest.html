@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Ведомость · {{ trip.route }} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-4 manifest">
+  <a class="small text-decoration-none" href="{% url 'core:cabinet' %}?date={{ trip.departure_at|date:'Y-m-d' }}"><i class="bi bi-arrow-left"></i> Мои рейсы</a>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mt-2 mb-3">
+    <div>
+      <h1 class="h4 fw-bold mb-1">{{ trip.route }}</h1>
+      <div class="text-muted-soft">
+        {{ trip.departure_at|date:"j E, l" }}, отправление в {{ trip.departure_at|time:"H:i" }}
+        {% if trip.vehicle %}· {{ trip.vehicle.plate_number }}{% endif %}
+      </div>
+    </div>
+    {% if trip.status != "scheduled" %}<span class="badge text-bg-light fs-6">{{ trip.get_status_display }}</span>{% endif %}
+  </div>
+
+  <div class="row g-2 mb-4">
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value">{{ summary.expected }}</div><div class="label">ждём</div></div></div>
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-success">{{ summary.boarded }}</div><div class="label">сели</div></div></div>
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value text-danger">{{ summary.no_show }}</div><div class="label">не явились</div></div></div>
+    <div class="col-6 col-md-3"><div class="card-soft stat-tile"><div class="value">{{ summary.collected|floatformat:0 }}<span class="fs-6 text-muted-soft"> / {{ summary.to_collect|floatformat:0 }}</span></div><div class="label">собрано, BYN</div></div></div>
+  </div>
+
+  {% if not trip.marks_open and trip.status == "scheduled" %}
+    <div class="alert alert-info"><i class="bi bi-info-circle"></i> Отмечать пассажиров можно в день рейса. Сейчас ведомость открыта только для просмотра.</div>
+  {% endif %}
+
+  <ol class="manifest-stops">
+    {% for row in rows %}
+      <li class="manifest-stop">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <div>
+            <div class="trip-time">{{ row.time|time:"H:i" }}</div>
+            <div class="fw-semibold">{{ row.route_stop.stop.city }}</div>
+            <div class="small text-muted-soft">{{ row.route_stop.stop.name }}</div>
+          </div>
+          {% if not forloop.last %}
+            <span class="onboard-pill" title="Занято мест после отправления с этой остановки"><i class="bi bi-people"></i> {{ row.on_board }} из {{ trip.capacity }}</span>
+          {% endif %}
+        </div>
+
+        {% for booking in row.boarding %}
+          <div class="passenger-card is-{{ booking.status }}" id="b{{ booking.pk }}">
+            <div class="d-flex justify-content-between gap-2">
+              <div>
+                <div class="fw-bold">{{ booking.passenger_name }}{% if booking.seats_count > 1 %} <span class="seats-chip">×{{ booking.seats_count }}</span>{% endif %}</div>
+                <a class="small" href="tel:{{ booking.passenger_phone }}"><i class="bi bi-telephone"></i> {{ booking.passenger_phone }}</a>
+                <div class="small text-muted-soft">до {{ booking.to_stop.stop.city }} · {{ booking.code }}</div>
+              </div>
+              <div class="text-end">
+                <div class="price">{{ booking.price|floatformat:2 }} <small>BYN</small></div>
+                {% if booking.status != "active" %}<span class="mark-pill">{{ booking.get_status_display }}</span>{% endif %}
+              </div>
+            </div>
+            {% if trip.marks_open %}
+              <form method="post" action="{% url 'driver:mark' booking.pk %}" class="d-flex gap-2 mt-2">
+                {% csrf_token %}
+                {% if booking.status == "active" %}
+                  <button class="btn btn-success flex-fill" name="status" value="boarded"><i class="bi bi-check-lg"></i> Сел</button>
+                  <button class="btn btn-outline-danger flex-fill" name="status" value="no_show"><i class="bi bi-x-lg"></i> Не явился</button>
+                {% else %}
+                  <button class="btn btn-sm btn-link text-muted-soft px-0" name="status" value="active"><i class="bi bi-arrow-counterclockwise"></i> Снять отметку</button>
+                {% endif %}
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        {% if row.leaving %}
+          <div class="small text-muted-soft mt-1">
+            <i class="bi bi-box-arrow-right"></i> Выходят:
+            {% for booking in row.leaving %}{{ booking.passenger_name }}{% if booking.seats_count > 1 %} ×{{ booking.seats_count }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </div>
+        {% endif %}
+        {% if not row.boarding and not row.leaving %}
+          <div class="small text-muted-soft">Здесь никто не садится и не выходит.</div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+
+  {% if trip.status == "scheduled" and trip.marks_open %}
+    <form method="post" action="{% url 'driver:complete' trip.pk %}" class="mt-4" onsubmit="return confirm('Завершить рейс? Пассажиры без отметки будут записаны как «не явился».');">
+      {% csrf_token %}
+      <button class="btn btn-primary btn-lg w-100"><i class="bi bi-flag"></i> Завершить рейс</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

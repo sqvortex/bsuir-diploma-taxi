@@ -240,3 +240,15 @@ class Trip(models.Model):
     def time_at(self, route_stop):
         """Когда рейс будет на остановке route_stop."""
         return self.departure_at + timedelta(minutes=route_stop.minutes_from_start)
+
+    def can_be_managed_by(self, user):
+        """Вести рейс (ведомость, отметки) может его водитель, диспетчер или администратор."""
+        return self.driver_id == user.pk or user.is_dispatcher or user.is_admin_role
+
+    @property
+    def marks_open(self):
+        """Отмечать пассажиров можно только в день рейса и пока рейс не отменён и не завершён."""
+        return (
+            self.status == self.Status.SCHEDULED
+            and timezone.localdate(self.departure_at) == timezone.localdate()
+        )

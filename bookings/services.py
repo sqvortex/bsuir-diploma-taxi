@@ -87,3 +87,58 @@ def cancel_booking(booking, user):
     booking.cancelled_at = timezone.now()
     booking.save(update_fields=["status", "cancelled_at"])
     return booking
+
+
+# ---------- Отметки водителя (ФТ-10) ----------
+
+MARK_STATUSES = [Booking.Status.BOARDED, Booking.Status.NO_SHOW, Booking.Status.ACTIVE]
+
+
+def mark_booking(booking, status, user):
+    """
+    Отметка водителя: пассажир сел (BOARDED), не явился (NO_SHOW)
+    или отметку нужно снять (снова ACTIVE, если водитель ошибся).
+    """
+    if status not in MARK_STATUSES:
+        raise BookingError("Неизвестная отметка.")
+    with transaction.atomic():
+        # Блокируем рейс, как при бронировании: отметка может снова занять место.
+        trip = Trip.objects.select_for_update().get(pk=booking.trip_id)
+        booking = Booking.objects.select_related("from_stop", "to_stop").get(pk=booking.pk)
+        if not trip.can_be_managed_by(user):
+            raise BookingError("Это не ваш рейс.")
+        if not trip.marks_open:
+            raise BookingError("Отмечать пассажиров можно только в день рейса.")
+        if booking.status == Booking.Status.CANCELLED:
+            raise BookingError("Бронь отменена.")
+
+        # Пассажир с отметкой «не явился» не занимает место, и его могли продать.
+        # Перед тем как вернуть ему место, проверяем, что оно ещё свободно.
+        was_free = booking.status == Booking.Status.NO_SHOW
+        takes_seat = status in Booking.OCCUPYING_STATUSES
+        if was_free and takes_seat:
+            if free_seats(trip, booking.from_stop, booking.to_stop) < booking.seats_count:
+                raise BookingError("Место пассажира уже занято, вернуть отметку нельзя.")
+
+        booking.status = status
+        booking.save(update_fields=["status"])
+        return booking
+
+
+def complete_trip(trip, user):
+    """
+    Водитель завершает рейс. Пассажиры без отметки считаются не явившимися:
+    это важно для статистики и будущего прогноза загрузки.
+    """
+    if not trip.can_be_managed_by(user):
+        raise BookingError("Это не ваш рейс.")
+    if trip.status != Trip.Status.SCHEDULED:
+        raise BookingError("Рейс уже завершён или отменён.")
+    if trip.departure_at > timezone.now():
+        raise BookingError("Рейс ещё не отправился.")
+    with transaction.atomic():
+        not_marked = trip.bookings.filter(status=Booking.Status.ACTIVE)
+        no_show = not_marked.update(status=Booking.Status.NO_SHOW)
+        trip.status = Trip.Status.COMPLETED
+        trip.save(update_fields=["status"])
+    return no_show

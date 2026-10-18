@@ -1,21 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Мои рейсы · {{ SITE_NAME }}{% endblock %}
 {% block content %}
-<div class="container py-4">
-  {% include "cabinet/_header.html" with title="Мои рейсы сегодня" %}
-  <p class="text-muted-soft mt-n3 mb-4">{{ today|date:"j E Y, l" }}</p>
+<div class="container py-4" style="max-width: 860px">
+  {% include "cabinet/_header.html" with title="Мои рейсы" %}
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h2 class="h5 fw-bold mb-0">{% if day == today %}Сегодня, {% endif %}{{ day|date:"j E, l" }}</h2>
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <a class="btn btn-outline-primary btn-sm" href="?date={{ prev_day|date:'Y-m-d' }}" aria-label="Предыдущий день"><i class="bi bi-chevron-left"></i></a>
+      <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control form-control-sm" onchange="this.form.submit()">
+      <a class="btn btn-outline-primary btn-sm" href="?date={{ next_day|date:'Y-m-d' }}" aria-label="Следующий день"><i class="bi bi-chevron-right"></i></a>
+    </form>
+  </div>
 
   {% for trip in trips %}
-    {% include "cabinet/_trip_row.html" %}
+    <a class="card-soft card-hover d-block text-reset text-decoration-none p-3 mb-2" href="{% url 'driver:manifest' trip.pk %}">
+      <div class="row align-items-center g-2">
+        <div class="col-3 col-md-2"><div class="trip-time">{{ trip.departure_at|time:"H:i" }}</div></div>
+        <div class="col-9 col-md-5">
+          <div class="fw-semibold">{{ trip.route }}</div>
+          <div class="small text-muted-soft">
+            {% if trip.vehicle %}{{ trip.vehicle.brand }}, {{ trip.vehicle.plate_number }}{% else %}<span class="text-danger">машина не назначена</span>{% endif %}
+            {% if trip.status != "scheduled" %}· {{ trip.get_status_display|lower }}{% endif %}
+          </div>
+        </div>
+        <div class="col-8 col-md-3">
+          <div class="d-flex justify-content-between small mb-1"><span>Занято {{ trip.booked }} из {{ trip.capacity }}</span></div>
+          <div class="load-bar"><span style="width: {{ trip.load_percent }}%"></span></div>
+        </div>
+        <div class="col-4 col-md-2 text-end">
+          <span class="btn btn-primary btn-sm"><i class="bi bi-list-check"></i> Ведомость</span>
+        </div>
+      </div>
+    </a>
   {% empty %}
-    <div class="card-soft p-4 text-center text-muted-soft mb-3">Сегодня рейсов нет.</div>
+    <div class="card-soft p-4 text-center text-muted-soft mb-3">В этот день рейсов нет.</div>
   {% endfor %}
 
   {% if upcoming %}
-    <h2 class="h5 fw-bold mt-4 mb-3">На неделю вперёд</h2>
-    {% for trip in upcoming %}{% include "cabinet/_trip_row.html" %}{% endfor %}
+    <h2 class="h5 fw-bold mt-4 mb-3">Следующие 7 дней</h2>
+    {% for trip in upcoming %}
+      <a class="d-block text-reset text-decoration-none" href="{% url 'driver:manifest' trip.pk %}">{% include "cabinet/_trip_row.html" %}</a>
+    {% endfor %}
   {% endif %}
-
-  <p class="small text-muted-soft mt-4"><i class="bi bi-info-circle"></i> Посадочная ведомость и отметки «сел» / «не явился» появятся на этапе 5.</p>
 </div>
 {% endblock %}
