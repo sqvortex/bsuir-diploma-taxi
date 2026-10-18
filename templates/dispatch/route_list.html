@@ -14,7 +14,7 @@
           <div class="card-soft card-hover p-4 h-100 {% if not route.is_active %}opacity-50{% endif %}">
             <div class="d-flex justify-content-between mb-3">
               <div class="fw-bold fs-5">{{ route }}</div>
-              {% if not route.is_active %}<span class="badge text-bg-light">не действует</span>{% endif %}
+              {% if not route.is_active %}<span class="badge bg-body-secondary text-body">не действует</span>{% endif %}
             </div>
             <ol class="route-stops mb-2">
               {% for rs in route.route_stops.all %}

@@ -3,6 +3,7 @@
 
   Все цвета сервиса собраны в блоке :root ниже. Чтобы сменить палитру,
   достаточно поменять эти несколько значений, остальные стили берут цвета отсюда.
+  Цвета тёмной темы — в блоке :root[data-bs-theme="dark"] сразу после него.
 */
 :root {
   /* Палитра Viago: спокойный фиолетовый */
@@ -17,6 +18,12 @@
   --surface: #ffffff;        /* фон карточек */
   --page: #faf9fe;           /* фон страницы */
   --line: #e7e3f3;           /* рамки и разделители */
+  --ok-bg: #e3f5ec;          /* фон значка «свободно», «сел» */
+  --warn: #92400e;           /* «осталось мало мест» */
+  --warn-bg: #fef3c7;
+  --danger: #991b1b;         /* «мест нет», «не явился» */
+  --danger-bg: #fee2e2;
+  --shadow: 15, 23, 42;      /* цвет тени (в формате R, G, B) */
   --radius: 14px;
 
   /* Подставляем наши цвета в Bootstrap */
@@ -30,6 +37,64 @@
   --bs-body-color: var(--ink);
   --bs-body-bg: var(--page);
   --bs-border-radius: 10px;
+}
+
+/* Тёмная тема: включается кнопкой с луной в шапке (атрибут data-bs-theme="dark" у <html>). */
+:root[data-bs-theme="dark"] {
+  --brand: #7f61ff;
+  --brand-dark: #6a4ef0;
+  --brand-light: #262040;
+  --accent: #7f61ff;
+  --ok: #3ccf8e;
+  --ink: #ece9f6;
+  --muted: #a39cbd;
+  --surface: #1b1730;
+  --page: #121020;
+  --line: #2f2948;
+  --ok-bg: rgba(60, 207, 142, 0.15);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.15);
+  --shadow: 0, 0, 0;
+
+  --bs-primary-rgb: 127, 97, 255;
+  --bs-link-color-rgb: 157, 133, 255;
+  --bs-link-hover-color-rgb: 187, 170, 255;
+  --bs-link-color: #9d85ff;
+  --bs-link-hover-color: #bbaaff;
+  --bs-border-color: var(--line);
+  --bs-secondary-bg: var(--line);
+  --bs-tertiary-bg: var(--surface);
+}
+
+:root[data-bs-theme="dark"] .btn-light {
+  --bs-btn-bg: var(--line);
+  --bs-btn-border-color: var(--line);
+  --bs-btn-color: var(--ink);
+  --bs-btn-hover-bg: var(--brand-light);
+  --bs-btn-hover-border-color: var(--brand-light);
+  --bs-btn-hover-color: var(--ink);
+}
+
+:root[data-bs-theme="dark"] .form-control,
+:root[data-bs-theme="dark"] .form-select {
+  background-color: var(--page);
+}
+
+.theme-toggle {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+}
+
+.theme-toggle:hover {
+  color: var(--brand);
+  background: var(--brand-light);
 }
 
 body {
@@ -144,7 +209,7 @@ main {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 2px rgba(var(--shadow), 0.04), 0 8px 24px rgba(var(--shadow), 0.06);
 }
 
 .card-hover {
@@ -153,7 +218,7 @@ main {
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 12px 32px rgba(var(--shadow), 0.1);
 }
 
 .feature-icon {
@@ -219,18 +284,18 @@ main {
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
-  background: #e3f5ec;
+  background: var(--ok-bg);
   color: var(--ok);
 }
 
 .seats-badge.is-low {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--warn-bg);
+  color: var(--warn);
 }
 
 .seats-badge.is-none {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 /* ---------- Кабинеты ---------- */
@@ -369,7 +434,7 @@ main {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(var(--shadow), 0.08);
   overflow: hidden;
 }
 
@@ -478,7 +543,7 @@ main {
 }
 
 .passenger-card.is-boarded { border-left-color: var(--ok); }
-.passenger-card.is-no_show { border-left-color: #dc3545; opacity: 0.75; }
+.passenger-card.is-no_show { border-left-color: var(--danger); opacity: 0.75; }
 
 .seats-chip {
   font-size: 0.75rem;
@@ -497,8 +562,8 @@ main {
   border-radius: 999px;
 }
 
-.is-boarded .mark-pill { background: #e3f5ec; color: var(--ok); }
-.is-no_show .mark-pill { background: #fee2e2; color: #991b1b; }
+.is-boarded .mark-pill { background: var(--ok-bg); color: var(--ok); }
+.is-no_show .mark-pill { background: var(--danger-bg); color: var(--danger); }
 
 .btn-success {
   --bs-btn-bg: var(--ok);
@@ -507,3 +572,6 @@ main {
   --bs-btn-hover-border-color: #188059;
   font-weight: 600;
 }
+
+.text-ok { color: var(--ok); }
+.text-bad { color: var(--danger); }
