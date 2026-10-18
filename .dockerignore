@@ -8,3 +8,4 @@ staticfiles
 .pytest_cache
 .env
 var
+backups

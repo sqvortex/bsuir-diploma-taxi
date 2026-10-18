@@ -44,3 +44,10 @@ def trip(route, driver):
         route=route, template=template, vehicle=vehicle, driver=driver,
         departure_at=template.departure_on(date.today() + timedelta(days=7)),
     )
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """Кеш прогнозов не должен переходить из одного теста в другой."""
+    from django.core.cache import cache
+    cache.clear()

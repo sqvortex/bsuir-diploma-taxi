@@ -124,9 +124,13 @@ def find_trips(from_city, to_city, day):
         .order_by("departure_at")
     )
 
+    trips = list(trips)
+    stops_by_route = stops_of_routes({trip.route_id for trip in trips})
+    taken_by_trip = occupied_segments({trip.pk for trip in trips})
+
     offers = []
     for trip in trips:
-        stops = list(trip.route.ordered_stops())
+        stops = stops_by_route[trip.route_id]
         boarding = next((s for s in stops if s.stop.city.lower() == from_city.lower()), None)
         if boarding is None:
             continue
@@ -136,6 +140,10 @@ def find_trips(from_city, to_city, day):
         )
         if leaving is None:
             continue  # город прибытия стоит раньше города отправления
+        busy = sum(
+            seats for start, end, seats in taken_by_trip.get(trip.pk, [])
+            if start < leaving.order and end > boarding.order
+        )
         offers.append(TripOffer(
             trip=trip,
             from_stop=boarding,
@@ -143,6 +151,27 @@ def find_trips(from_city, to_city, day):
             departure=trip.time_at(boarding),
             arrival=trip.time_at(leaving),
             price=boarding.price_to(leaving),
-            free_seats=free_seats(trip, boarding, leaving),
+            free_seats=max(trip.capacity - busy, 0),
         ))
     return offers
+
+
+def stops_of_routes(route_ids):
+    """Остановки сразу всех маршрутов одним запросом: {id маршрута: остановки по порядку}."""
+    result = {route_id: [] for route_id in route_ids}
+    for route_stop in RouteStop.objects.filter(route_id__in=route_ids).select_related("stop").order_by("order"):
+        result[route_stop.route_id].append(route_stop)
+    return result
+
+
+def occupied_segments(trip_ids):
+    """Занятые места сразу у всех рейсов одним запросом: {id рейса: [(с какой, по какую, мест)]}."""
+    from bookings.models import Booking
+
+    rows = Booking.objects.filter(trip_id__in=trip_ids, status__in=Booking.OCCUPYING_STATUSES).values_list(
+        "trip_id", "from_stop__order", "to_stop__order", "seats_count"
+    )
+    result = {}
+    for trip_id, start, end, seats in rows:
+        result.setdefault(trip_id, []).append((start, end, seats))
+    return result

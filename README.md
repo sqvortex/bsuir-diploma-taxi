@@ -4,7 +4,7 @@
 маршрутных такси по расписанию с прогнозированием свободных мест.
 
 Стек: Python 3.12+, Django 5.2, PostgreSQL 16 (для быстрого старта можно SQLite), Bootstrap 5,
-Chart.js, pandas, scikit-learn и openpyxl (прогноз и отчёты), Docker, pytest.
+Chart.js, pandas, scikit-learn и openpyxl (прогноз и отчёты), gunicorn, Docker, pytest.
 План этапов: [docs/plan.md](docs/plan.md).
 
 ## Как запустить у себя
@@ -29,7 +29,7 @@ python manage.py generate_history
 python manage.py train_forecast
 
 # 6. Запустить сайт и открыть http://127.0.0.1:8000/
-python manage.py runserver
+python manage.py runserver   # для разработки; рабочий запуск: gunicorn config.wsgi
 ```
 
 ## Демо-пользователи
@@ -80,11 +80,30 @@ python manage.py runserver
 python manage.py generate_trips --days 14
 ```
 
-## Тесты
+## Тесты и испытания
 
 ```bash
-pytest
+pytest                                   # все автоматические тесты
+python scripts/load_test.py --users 50   # нагрузка: поиск рейсов при 50 одновременных пользователях
 ```
+
+Какие тесты проверяют какое требование ТЗ, и ручные тест-кейсы: [docs/test-cases.md](docs/test-cases.md).
+Нагрузку нужно проверять на сайте, запущенном через gunicorn (так он работает в Docker): `runserver` медленнее и нужен только для разработки.
+
+## Резервные копии
+
+```bash
+python manage.py backup_db     # копия базы в папку backups/, хранятся последние 14
+```
+
+Запускайте раз в сутки планировщиком. Как восстановить базу и какие команды ещё запускать по расписанию,
+написано в [руководстве администратора](docs/admin-guide.md).
+
+## Руководства
+
+- [Руководство пользователя](docs/user-guide.md): пассажир, водитель, диспетчер, администратор.
+- [Руководство администратора](docs/admin-guide.md): установка, настройки, расписание команд, копии.
+- [Программа и методика испытаний](docs/test-cases.md).
 
 ## Как устроен код
 
@@ -102,7 +121,8 @@ pytest
 | `templates/` | HTML-шаблоны страниц |
 | `static/` | стили (`css/theme.css`), Bootstrap 5 и Chart.js (`vendor/`) |
 | `tests/` | автоматические тесты (pytest) |
-| `docs/` | план и заметки к пояснительной записке |
+| `docs/` | план, руководства пользователя и администратора, программа и методика испытаний |
+| `scripts/` | проверка нагрузки (`load_test.py`) |
 
 ## Бронирование
 
