@@ -51,14 +51,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Копия сохранена: {target} ({size:.0f} КБ). Удалено старых копий: {removed}."))
 
     def backup_sqlite(self, target):
-        source = sqlite3.connect(connection.settings_dict["NAME"])
+        # Копируем через уже открытое соединение Django: так работает и с файлом, и с базой в памяти (тесты).
+        connection.ensure_connection()
+        destination = sqlite3.connect(target)
         try:
-            destination = sqlite3.connect(target)
             with destination:
-                source.backup(destination)
-            destination.close()
+                connection.connection.backup(destination)
         finally:
-            source.close()
+            destination.close()
 
     def backup_postgres(self, target):
         db = connection.settings_dict
