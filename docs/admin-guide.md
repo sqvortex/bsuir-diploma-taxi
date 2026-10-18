@@ -83,12 +83,14 @@ pg_restore -U postgres -d viago_restore --no-owner backups/viago-20261018-030000
 
 Проверьте данные в `viago_restore`, потом переключите сайт на неё (`POSTGRES_DB`) или замените рабочую базу.
 
-**PostgreSQL в Docker.** Образ сайта не содержит `pg_dump`, поэтому копию делает контейнер базы:
+**PostgreSQL в Docker.** В образе сайта есть `pg_dump` нужной версии (16), поэтому команда работает прямо в контейнере, копии появляются в папке `backups/` проекта:
 
 ```bash
-docker compose exec -T db pg_dump -U viago --format=custom viago > backups/viago-$(date +%Y%m%d).dump
-docker compose exec -T db pg_restore -U viago -d viago --clean --no-owner < backups/viago-20261018.dump   # восстановление
+docker compose exec web python manage.py backup_db
+docker compose exec -T db pg_restore -U viago -d viago --clean --no-owner < backups/viago-20261018-030000.dump   # восстановление
 ```
+
+(Если образ собран до этого изменения, пересоберите его: `docker compose up --build`.)
 
 Проверено на практике: копия демо-базы (43 тысячи броней) восстановилась в новую базу, число броней совпало.
 
