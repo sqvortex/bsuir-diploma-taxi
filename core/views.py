@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from accounts.models import User
 from bookings.models import Booking
@@ -115,15 +116,20 @@ def trips_with_load(trips):
 
 
 def driver_cabinet(request):
+    """Рейсы водителя на выбранный день (ФТ-8) и на неделю вперёд."""
     today = timezone.localdate()
-    trips = Trip.objects.filter(driver=request.user, departure_at__date=today).order_by("departure_at")
+    day = parse_date(request.GET.get("date", "")) or today
+    trips = Trip.objects.filter(driver=request.user, departure_at__date=day).order_by("departure_at")
     upcoming = Trip.objects.filter(
         driver=request.user,
-        departure_at__date__gt=today,
-        departure_at__date__lte=today + timedelta(days=7),
+        departure_at__date__gt=day,
+        departure_at__date__lte=day + timedelta(days=7),
     ).order_by("departure_at")
     return render(request, "cabinet/driver.html", {
         "today": today,
+        "day": day,
+        "prev_day": day - timedelta(days=1),
+        "next_day": day + timedelta(days=1),
         "trips": trips_with_load(trips),
         "upcoming": trips_with_load(upcoming),
     })

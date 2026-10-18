@@ -14,9 +14,12 @@
         · занято мест {{ booked }} из {{ trip.capacity }}
       </div>
     </div>
-    {% if trip.status == "scheduled" %}
-      <a class="btn btn-primary" href="{% url 'bookings:book' trip.pk %}"><i class="bi bi-telephone-plus"></i> Бронь по звонку</a>
-    {% endif %}
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'driver:manifest' trip.pk %}"><i class="bi bi-list-check"></i> Ведомость</a>
+      {% if trip.status == "scheduled" %}
+        <a class="btn btn-primary" href="{% url 'bookings:book' trip.pk %}"><i class="bi bi-telephone-plus"></i> Бронь по звонку</a>
+      {% endif %}
+    </div>
   </div>
 
   <div class="card-soft">
